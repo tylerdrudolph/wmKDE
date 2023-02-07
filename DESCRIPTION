@@ -1,5 +1,5 @@
-Package: mwKDE
-Title: Mean weighted kernel density estimation
+Package: wmKDE
+Title: Weighted mean kernel density estimation
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Tyler D.",
