@@ -1,0 +1,31 @@
+Package: mwKDE
+Title: Mean weighted kernel density estimation
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Tyler D.",
+           family = "Rudolph",
+           role = c("aut", "cre"),
+           email = "tylerdrudolph@gmail.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: R package for estimating spatially and individually weighted mean population kernels.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports: 
+    ks,
+    maptools,
+    methods,
+    parallel,
+    raster,
+    rgdal,
+    sf,
+    shiny,
+    sp,
+    spatialEco,
+    spatstat,
+    spatstat.geom,
+    stats,
+    stringr,
+    weights
