@@ -12,8 +12,7 @@ rarifyGPS = function(df, date.heure=NULL, id=NULL, reftime = chron::times(c("12:
   df$id <- id
 
   ## S'assurer d'avoir un champs intitul? "time" ayant le format 'times' (package::chron)
-  library(chron)
-  df$time = times(format(df$date.heure, format="%H:%M:%S"))
+  df$time = chron::times(format(df$date.heure, format="%H:%M:%S"))
 
   ## Soustraire toutes les dates-heure de midi afin d'avoir les valeurs m?dianes
   df$diff <- abs(reftime - df$time)
@@ -23,7 +22,7 @@ rarifyGPS = function(df, date.heure=NULL, id=NULL, reftime = chron::times(c("12:
   df <- df[order(df$id, df$date.heure, df$diff), ]
 
   ## Extraire les observations correspondant au critère de base
-  df.min <- aggregate(df$diff, list(id = df$id, date = as.Date(df$date.heure)), min, na.rm = TRUE)
+  df.min <- stats::aggregate(df$diff, list(id = df$id, date = as.Date(df$date.heure)), min, na.rm = TRUE)
     colnames(df.min) <- c("id", "date", "diff")  # renommer les colonnes
   df.subset <- subset(df, paste(df$id, as.Date(df$date.heure), df$diff) %in% paste(df.min$id, df.min$date, df.min$diff))
 

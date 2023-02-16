@@ -32,7 +32,7 @@ reweightedUD <- function(UD, out=1) {
     sum(weights*rem) == rem
     v = v - (weights * rem)
   }
-  if(out==1) { UD$fhat = v/cell.area } else { UD$fhat = v }
+  if(out==1) { UD$fhat = v / cell.area } else { UD$fhat = v }
   return(UD)
 }
 

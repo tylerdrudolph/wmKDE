@@ -13,5 +13,5 @@ raster.invert <- function (x) {
                             asSample = FALSE)
   rmin <- raster::cellStats(x, stat = "min", na.rm = TRUE,
                             asSample = FALSE)
-  return(((x - rmax) * -1) + rmin)
+  return(((x - rmax) * - 1) + rmin)
 }

@@ -1,4 +1,4 @@
-#' Calculate the percentage of relocations situated within a given polygon.
+#' Calculate the percentage of relocations situated within a given polygon (deprecated)
 #'
 #' @param xy 2-column data.frame or matrix containing projected x and y coordinates
 #' @param poly  a SpatialPolygons or SpatialPolygonsDataFrame object
