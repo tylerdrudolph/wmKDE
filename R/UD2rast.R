@@ -8,7 +8,7 @@
 #'
 #' @examples
 
-ud2rast <- function(UD, sproj = NULL) {
+UD2rast <- function(UD, sproj = NULL) {
 
   return(terra::flip(terra::rast(x = t(UD$fhat),
                    extent = terra::ext(min(UD$x1), max(UD$x1), min(UD$x2), max(UD$x2)),

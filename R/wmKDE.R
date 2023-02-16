@@ -94,7 +94,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
     }
 
     ## Deploy multiple UD estimations
-    udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, user.grid = herd.grid, bw.global = bw.global, ncores = ncores, verbose = FALSE)
+    udList <- bKDE(xy = xy, id = idvec, wts = wtvec, user.grid = herd.grid, bw.global = bw.global, ncores = ncores, verbose = FALSE)
 
     if(avg & length(udList) > 1) {
 
@@ -113,7 +113,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
       if(length(unique(dplyr::pull(udw, w))) > 1) fileTag = 'weighted' else fileTag = 'weighted'
       message(paste0("Deriving the ", fileTag, " mean population UD..."))
       if(spatres != 1000) message("Échantillonnage au ", spatres, "m...")
-      wmKern <- wmKDE::mwUD(udList, w = udw$w[match(names(udList), dplyr::pull(udw, id))], sproj = sproj, checksum =! zscale, silent = TRUE)
+      wmKern <- mwUD(udList, w = udw$w[match(names(udList), dplyr::pull(udw, id))], sproj = sproj, checksum =! zscale, silent = TRUE)
 
       if(zscale) wmKern$fhat <- wmKern$fhat / sum(wmKern$fhat) / spatres / spatres
 
@@ -136,17 +136,17 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
 
     ############################################
     ## Extract isopleth polygons, including core/intensive use area
-    isopoly <- UD2sp(UD = wmKern, sproj = sproj,
+    isopoly <- UD2sf(UD = wmKern, sproj = sproj,
                        probs = sort(c(crit.core.isopleth, c(0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1))))
 
     ## Determine the % of points falling within individual isopleth boundaries, including core area
-    ftab <- terra::extract(wmKDE::ud2rast(wmKern, sproj), xy) %>% dplyr::rename(plevel = layer)
+    ftab <- terra::extract(UD2rast(wmKern, sproj), xy) %>% dplyr::rename(plevel = layer)
     isopoly <- dplyr::mutate(isopoly, pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
                              coreArea = ifelse(isopleth == crit.core.isopleth, TRUE, FALSE), .before = geometry)
 
     wmKernRast <- wmKern
-    wmKernRast$fhat <- 100 - wmKDE::fhat2confin(wmKern$fhat)
-    wmKernRast <- wmKDE::ud2rast(wmKernRast, sproj)
+    wmKernRast$fhat <- 100 - fhat2confin(wmKern$fhat)
+    wmKernRast <- UD2rast(wmKernRast, sproj)
     wmKernRast[wmKernRast < 0.05] <- NA
     wmKernRast <- rast::trim(wmKernRast)
 
@@ -184,12 +184,12 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
         retObj <- c(retObj, iso = wmKernRast)
       }
       if('prob' %in% ktype) {
-        terra::writeRaster(wmKDE::ud2rast(wmKern, sproj), filename = file.path(writeDir, paste0(fileTag, '_prob.tif')))
-        retObj <- c(retObj, prob = terra::crop(wmKDE::ud2rast(wmKern, sproj), wmKernRast))
+        terra::writeRaster(UD2rast(wmKern, sproj), filename = file.path(writeDir, paste0(fileTag, '_prob.tif')))
+        retObj <- c(retObj, prob = terra::crop(UD2rast(wmKern, sproj), wmKernRast))
       }
       if('vol' %in% ktype) {
-        terra::writeRaster(wmKDE::ud2rast(wmKern, sproj) * spatres * spatres, filename = file.path(writeDir, paste0(fileTag, '_vol.tif')))
-        retObj <- c(retObj, vol = terra::crop(wmKDE::ud2rast(wmKern, sproj) * spatres * spatres, wmKernRast))
+        terra::writeRaster(UD2rast(wmKern, sproj) * spatres * spatres, filename = file.path(writeDir, paste0(fileTag, '_vol.tif')))
+        retObj <- c(retObj, vol = terra::crop(UD2rast(wmKern, sproj) * spatres * spatres, wmKernRast))
       }
 
       ## Export isopleth contours

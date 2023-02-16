@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-UD2sp = function(UD, sproj = NULL, probs = 0.95) {
+UD2sf = function(UD, sproj = NULL, probs = 0.95) {
 
   # derive isopleth contours
   p <- as.vector(calcHR(UD, p = probs, silent = T)$ps)
