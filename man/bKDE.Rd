@@ -11,6 +11,7 @@ bKDE(
   ncores = parallel::detectCores() - 1,
   user.grid = NULL,
   bw.global = TRUE,
+  write2file = FALSE,
   verbose = TRUE
 )
 }
@@ -28,9 +29,6 @@ bKDE(
 \item{bw.global}{logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions.}
 
 \item{verbose}{logical indicating whether messages should be printed}
-}
-\value{
-
 }
 \description{
 Batch deployment of multiple kernel density estimations based on levels of a specified factor.

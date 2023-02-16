@@ -12,9 +12,6 @@ hone.extent(spatpol, r = 1000)
 
 \item{r}{expansion radius in projected coordinates (m)}
 }
-\value{
-
-}
 \description{
 hone.extent
 Generate a buffered Extent around a polygon or other spatial object from which an extent object can be extracted.

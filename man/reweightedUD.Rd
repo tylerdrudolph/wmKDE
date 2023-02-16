@@ -11,9 +11,6 @@ reweightedUD(UD, out = 1)
 
 \item{out}{integer parameter specifying whether output cell values are aspatial (out=1) or volume-based (out=2).}
 }
-\value{
-
-}
 \description{
 Redistribute UD probability densities proportionally so as to ensure that the sum of cell volumes equals one.
 }

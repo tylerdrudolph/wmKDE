@@ -35,6 +35,3 @@ data.frame
 \description{
 Subset a GPS collar telemetry database according to user preferences and/or analytical objectives.
 }
-\examples{
-
-}

@@ -9,9 +9,6 @@ raster.invert(x)
 \arguments{
 \item{x}{RasterLayer object}
 }
-\value{
-
-}
 \description{
 Invert the values of a raster
 }

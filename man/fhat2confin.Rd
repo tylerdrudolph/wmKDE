@@ -9,9 +9,6 @@ fhat2confin(z)
 \arguments{
 \item{z}{numeric vector representing UD density values (fhat)}
 }
-\value{
-
-}
 \description{
 Convert UD density estimates into relative probabilities
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/percent.pts.in.poly.R
 \name{percent.pts.in.poly}
 \alias{percent.pts.in.poly}
-\title{Calculate the percentage of relocations situated within a given polygon.}
+\title{Calculate the percentage of relocations situated within a given polygon (deprecated)}
 \usage{
 percent.pts.in.poly(xy, poly, w = NULL)
 }
@@ -13,9 +13,6 @@ percent.pts.in.poly(xy, poly, w = NULL)
 
 \item{w}{optional vector of weights equal in length to nrow(xy)}
 }
-\value{
-
-}
 \description{
-Calculate the percentage of relocations situated within a given polygon.
+Calculate the percentage of relocations situated within a given polygon (deprecated)
 }

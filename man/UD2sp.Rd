@@ -4,21 +4,14 @@
 \alias{UD2sp}
 \title{Given a Utilization Distribution, generate polygon(s) corresponding to specified probability contours}
 \usage{
-UD2sp(UD, PID, proj = sp::CRS("+init=epsg:32198"), probs = 0.95, levels = NULL)
+UD2sp(UD, sproj = NULL, probs = 0.95)
 }
 \arguments{
 \item{UD}{object representing a Utilization Distribution. A list containing 3 elements: x (x1) and y (x2) coordinates, and corresponding density estimates (fhat)}
 
-\item{PID}{character identifier to be written to SpatialPolygonsDataFrame output}
-
-\item{proj}{projected coordinate system of input UD}
+\item{sproj}{projected coordinate system of input UD}
 
 \item{probs}{probability contour(s) at which to generate the polygon}
-
-\item{levels}{threshold minimum density value at which to generate the polygon contours. Useful to approximate the 100\% probability contour polygon. Overrides the probs argument.}
-}
-\value{
-
 }
 \description{
 Given a Utilization Distribution, generate polygon(s) corresponding to specified probability contours
