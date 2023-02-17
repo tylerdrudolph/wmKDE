@@ -11,7 +11,7 @@
 #' @param spw optional numeric vector of spatial relocation weights, length of which must be equal to nrow(x). Weights will be rescaled if sum(spw) != nrow(x).
 #' @param udw optional 2-column data.frame containing individual UD weights. Must contain a field with name matching argument 'id' (one row per unique record) and a second field of weights entitled 'w'.
 #' @param herd.grid optional specification of grid over which to estimate the UD. Default is kernel.grid(locs = st_coordinates(x), exp.range = 3, cell.size = spatres).
-#' @param bw.global logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions.
+#' @param bw.global logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions. Default uses plug-in method of bandwidth selection by default (alternative options not yet implemented).
 #' @param zscale logical indicating whether individual UD probability densities should be rescaled prior to cellwise averaging (recommended). Only applicable when avg = TRUE.
 #' @param spatres vector of length 1 specifying the desired spatial resolution of the output UD in the x & y dimensions. Asymmetrical cells not implemented.
 #' @param ktype character vector indicating type of kernel value to return. Options are 'iso' = isopleth contours (default, higher values indicate greater probability); 'prob' = UD probabilities; 'vol' = UD volumes (sum to 1). Multiple arguments are accepted.
@@ -21,14 +21,17 @@
 #' @param fileTag optional string to append to file name when export=TRUE.
 #' @param writeDir optional path to desired write folder location. Default is working directory.
 #'
-#' @return
+#' @return list containing spatRaster object(s) of length equal to length(ktype) and one sf multipolygons object corresponding to isopleth and core area contours
 #' @export
 #'
 #' @examples
+#'
 wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = NULL,
                   bw.global = TRUE, zscale = TRUE, spatres = 1000, ktype = 'iso',
                   ncores = ifelse(avg, parallel::detectCores() - 1, 1),
                   write2file = FALSE, ow = TRUE, writeDir = getwd(), fileTag = NULL) {
+
+  X <- Y <- w <- layer <- isopleth <- geometry <- plevel <- NULL
 
   ## Convert from spatial where applicable
   if(inherits(x, 'Spatial')) x <- sf::st_as_sf(x)
@@ -38,21 +41,21 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
     if(sf::st_is_longlat(x)) stop('x is not in a projected coordinate reference system')
     sproj <- sf::st_crs(x)
     xy <- as.data.frame(sf::st_coordinates(x)) %>%
-      dplyr::rename(x = X, y = Y)
+      rename(x = X, y = Y)
   } else {
     stop('x must be a simple features object')
   }
 
   if(!is.null(id)) {
     id <- match.arg(id, names(x), several.ok = F)
-    idvec <- dplyr::pull(x, id) %>% as.character
+    idvec <- pull(x, id) %>% as.character
   } else {
     idvec <- rep(1, nrow(x))
   }
 
   if(!is.null(spw)) {
     spw <- match.arg(spw, names(x), several.ok = F)
-    wtvec <- dplyr::pull(x, spw)
+    wtvec <- pull(x, spw)
     if(!inherits(wtvec, 'numeric'))  stop('spw not numeric')
   } else {
     wtvec <- rep(1, nrow(x))
@@ -61,7 +64,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
   if(avg) {
     if(!is.null(udw)) {
       if(!id %in% names(udw)) stop(paste0("No '", id, "' field in udw"))
-      if(any(!idvec %in% (unique(dplyr::pull(udw, id) %>% as.character)))) stop(paste0(id, ' values missing from udw'))
+      if(any(!idvec %in% (unique(pull(udw, id) %>% as.character)))) stop(paste0(id, ' values missing from udw'))
     } else {
       udw <- data.frame(unique(idvec), w = rep(1, length(unique(idvec))))
       names(udw)[1] <- id
@@ -110,10 +113,10 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
       }
 
       ## Derive the mean population UD (no weighting)
-      if(length(unique(dplyr::pull(udw, w))) > 1) fileTag = 'weighted' else fileTag = 'weighted'
+      if(length(unique(pull(udw, w))) > 1) fileTag = 'weighted' else fileTag = 'weighted'
       message(paste0("Deriving the ", fileTag, " mean population UD..."))
-      if(spatres != 1000) message("Échantillonnage au ", spatres, "m...")
-      wmKern <- mwUD(udList, w = udw$w[match(names(udList), dplyr::pull(udw, id))], sproj = sproj, checksum =! zscale, silent = TRUE)
+      if(spatres != 1000) message("Resampling to ", spatres, "m...")
+      wmKern <- wmUD(udList, w = udw$w[match(names(udList), pull(udw, id))], sproj = sproj, checksum =! zscale, silent = TRUE)
 
       if(zscale) wmKern$fhat <- wmKern$fhat / sum(wmKern$fhat) / spatres / spatres
 
@@ -140,15 +143,15 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
                        probs = sort(c(crit.core.isopleth, c(0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1))))
 
     ## Determine the % of points falling within individual isopleth boundaries, including core area
-    ftab <- terra::extract(UD2rast(wmKern, sproj), xy) %>% dplyr::rename(plevel = layer)
-    isopoly <- dplyr::mutate(isopoly, pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
-                             coreArea = ifelse(isopleth == crit.core.isopleth, TRUE, FALSE), .before = geometry)
+    ftab <- terra::extract(UD2rast(wmKern, sproj), xy) %>% rename(plevel = layer)
+    isopoly <- mutate(isopoly, pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
+                      coreArea = ifelse(isopleth == crit.core.isopleth, TRUE, FALSE), .before = geometry)
 
     wmKernRast <- wmKern
     wmKernRast$fhat <- 100 - fhat2confin(wmKern$fhat)
     wmKernRast <- UD2rast(wmKernRast, sproj)
     wmKernRast[wmKernRast < 0.05] <- NA
-    wmKernRast <- rast::trim(wmKernRast)
+    wmKernRast <- terra::trim(wmKernRast)
 
     if(write2file) {
 
@@ -203,89 +206,3 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
   return(retObj)
 
 }
-
-#     ############################
-#     ## Sauvegarder le resultat
-#
-#
-#     #######################################################
-#     ## Valider l'ajustement des kernels individuels a la ZUI globale
-#     validtab <- data.frame(table(id))
-#     names(validtab) <- c('IDAnimal','n.total')
-#     validtab$pct.in.zui <- sapply(as.character(validtab$IDAnimal), function(i) {
-#      percent.pts.in.poly(xy=xy[id==i,], poly=core.poly)
-#     })
-#
-#      if(spw) {
-#
-#        validtab <- cbind(validtab, wpct.in.zui = sapply(as.character(validtab$IDAnimal), function(i) {
-#          percent.pts.in.poly(xy=xy[id==i,], w=wts[id==i], poly=core.poly)
-#        }))
-#
-#        validtab$net.diff <- validtab$wpct.in.zui - validtab$pct.in.zui
-#
-#       validtab$IDAnimal <- as.character(validtab$IDAnimal)
-#       #validtab <- rbind(c('TOUS', sum(validtab$n.total), percent.pts.in.poly(xy=locs, poly=core.poly),
-#       #                  percent.pts.in.poly(xy=locs, w=wts, poly=core.poly), NA), validtab)
-#
-#       vstats <- cbind.data.frame(c("Mean", "Std.Dev"),
-#                                  rbind(mean=round(colMeans(validtab[,c(3:5)]), digits=2),
-#                                        sd=round(apply(validtab[,c(3:5)], 2, stats::sd), digits=2)))
-#
-#       names(vstats) <- c("Parameter", '%_in_coreArea', '%_in_coreArea_wtd', 'net.diff')
-#       names(validtab)[3:4] <- c('%_in_coreArea', '%_in_coreArea_wtd')
-#
-#     } else {
-#
-#       vstats <- cbind.data.frame(c("Mean", "Std.Dev"),
-#                                  rbind(mean=round(mean(validtab$pct.in.zui), digits=2),
-#                                        sd=round(stats::sd(validtab$pct.in.zui), digits=2)))
-#       names(vstats) <- c("Parameter", '%_in_coreArea')
-#       names(validtab)[3] <- '%_in_coreArea'
-#
-#     }
-#
-#     if(export) saveRDS(list(vtab=validtab[order(validtab$`%_in_coreArea`, decreasing=T),], stats=vstats), file=str_c(tempdir(), '/validtab.rds'))
-#
-#     #################################
-#     ## Exporter les contours de probabilites en format vectoriel
-#     #methods::slot(ci_contours, "polygons") <- lapply(methods::slot(ci_contours, "polygons"), maptools::checkPolygonsHoles)
-#     if(export) st_write(sf::st_buffer(sf::st_as_sf(ci_contours), 0.0), dsn=tempdir(), layer=fileTag, driver="ESRI Shapefile", delete_layer=ow)
-#     #if(export) rgdal::writeOGR(ci_contours, dsn=tempdir(), layer=fileTag, driver="ESRI Shapefile", overwrite_layer=ow)
-#
-#     #######################
-#     ## Exporter la ZUI en format fichier de forme
-#     if(export) rgdal::writeOGR(core.area.spdf, dsn=tempdir(), layer=stringr::str_c("ZUI_", fileTag), driver="ESRI Shapefile", overwrite=ow)
-#
-#     ###################################
-#     ## Exporter le kernel pondere en format raster (.tifs), valeurs de 0 a 100
-#     if(obj.ret) outKern <- wmKern
-#     wmKern$fhat <- fhat2confin(wmKern$fhat)
-#     if(export) raster::writeRaster(UD2rast(wmKern), filename=stringr::str_c(tempdir(), "/", fileTag, ".tif"), format="GTiff", overwrite=ow)
-#
-#     ###################################
-#     ## Exporter graphique du resultat
-#     if(export) {
-#       grDevices::png(file=stringr::str_c(tempdir(), "/", fileTag, ".png"), width = 8, height = 6, units='in', res=300, bg = "white")
-#       raster::plot(raster::crop(raster.invert(UD2rast(wmKern)),
-#                 hone.extent(spatpol=ci_contours[ci_contours$prob==1,], r=spatres*2)),
-#            main=ifelse(is.null(titre), fileTag, titre))
-#       plot(ci_contours[ci_contours$prob %in% c(0.1,0.5,0.75,0.95,1.00),], border='lightgrey', lwd=0.5, add=T)
-#       plot(core.area.spdf, border="red", lwd=0.5, add=T)
-#       grDevices::dev.off()
-#
-#       zip(zipfile = str_c('output/', fileTag), files = str_c(tempdir(), '/', dir(tempdir())))
-#     }
-#
-#     message("Analysis complete.")
-#
-#   })
-#
-#   message(stringr::str_c("Processing time: ", round(unname(ptime[3]), digits=2), ' seconds'))
-#
-#   if(export) saveRDS(ptime, str_c(tempdir(), '/ptime.rds'))
-#
-#   if(obj.ret) return(list(wmKern=outKern, ci_contours=ci_contours, coreArea=core.area.spdf, herd.grid=herd.grid))
-#
-# }
-#

@@ -4,10 +4,11 @@
 #' @param silent logical indicating whether or not to print messages (default = TRUE)
 #' @param plot logical indicating whether or not to print result
 #'
-#' @return
+#' @return isopleth associated with core/intensive use area of input UD
 #' @export
 #'
 #' @examples
+#'
 core.area <- function(UD, plot=FALSE, silent=TRUE) {
 
   ## Generate sequence of isopleth volumes

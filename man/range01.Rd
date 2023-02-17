@@ -9,6 +9,9 @@ range01(x)
 \arguments{
 \item{x}{numeric vector}
 }
+\value{
+numeric vector equal in length to x but rescaled between 0 and 1
+}
 \description{
 Rescale values of a vector to between 0 and 1
 }

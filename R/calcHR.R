@@ -6,10 +6,11 @@
 #' @param p vector of probabilities at which to derive home range size
 #' @param silent logical indicating whether or not to print messages (default = TRUE)
 #'
-#' @return
+#' @return probability density bin values associated with user-defined isopleths
 #' @export
 #'
 #' @examples
+#'
 calcHR <- function(est, p=c(0.5, 0.95), silent = TRUE) {
 
   ##  p = quantiles for estimation and display purposes

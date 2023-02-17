@@ -7,6 +7,8 @@
 wmUD(udList, w, sproj = NULL, silent = FALSE, dres = NULL, checksum = TRUE)
 }
 \arguments{
+\item{udList}{list of utilization distributions of equal dimensions.}
+
 \item{w}{vector of individual UD weights for cell-wise weighted means.}
 
 \item{sproj}{projected coordinate system of input UDs}
@@ -16,8 +18,9 @@ wmUD(udList, w, sproj = NULL, silent = FALSE, dres = NULL, checksum = TRUE)
 \item{dres}{desired pixel resolution of output UD}
 
 \item{checksum}{logical; should adjustments be made to ensure sure that all cell volumes sum to 1?}
-
-\item{UDlist}{list of utilization distributions of equal dimensions.}
+}
+\value{
+weighted mean spatRaster object
 }
 \description{
 Cell-wise weighted means of multiple Utilization Distributions

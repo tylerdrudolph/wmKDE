@@ -9,6 +9,9 @@ fhat2confin(z)
 \arguments{
 \item{z}{numeric vector representing UD density values (fhat)}
 }
+\value{
+numeric vector of length(z) representing isopleths corresponding to input density values
+}
 \description{
 Convert UD density estimates into relative probabilities
 }

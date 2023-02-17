@@ -8,6 +8,8 @@ rast2UD(r, sproj = NULL)
 }
 \arguments{
 \item{r}{spatRaster object}
+
+\item{sproj}{projected CRS of input spatRaster}
 }
 \value{
 UD object retaining cell values of original spatRaster object at original grid cell locations.

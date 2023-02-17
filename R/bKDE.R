@@ -7,11 +7,13 @@
 #' @param user.grid dimensions of the matrix over which the kernel will be estimated. Mandatory.
 #' @param bw.global logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions.
 #' @param verbose logical indicating whether messages should be printed
+#' @param write2file logical indicating whether results should be written to file
 #'
-#' @return
+#' @return list of UD objects (list of x1, x2, fhat) of length equal to length(unique(id))
 #' @export
 #'
 #' @examples
+#'
 bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
                  user.grid = NULL, bw.global = TRUE, write2file = FALSE,
                  verbose = TRUE) {
@@ -45,8 +47,8 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
       ## kernel density estimation using with or without spatial weights (scaled to sum to 1)
       wt <- wts[id %in% levz[m]]
       wt <- length(wt) * wt / sum(wt)
-      if(bw.global) H <- ks::Hpi(xy) else H <- ks::Hpi(tempxy)
-      kmat <- ks::kde(tempxy, w=wt, H=H,
+      if(bw.global) H <- Hpi(xy) else H <- Hpi(tempxy)
+      kmat <- kde(tempxy, w=wt, H=H,
                       xmin = c(user.grid$range.x[[1]][1], user.grid$range.x[[2]][1]),
                       xmax = c(user.grid$range.x[[1]][2], user.grid$range.x[[2]][2]),
                       gridsize = user.grid$grid.size[1])
@@ -61,7 +63,6 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
     parallel::clusterExport(cl, varlist=c('levz','xy','id','wts','bw.global',
                                 'verbose','user.grid'), envir=environment())
 
-    library(ks)
     kernelUDs <- parallel::parLapply(cl, 1:length(levz), function(m) {
 
       tempxy <- xy[id %in% levz[m], ]

@@ -30,7 +30,7 @@ subsetDB(
 \item{nmin}{vector}
 }
 \value{
-data.frame
+original df with specified filters applied
 }
 \description{
 Subset a GPS collar telemetry database according to user preferences and/or analytical objectives.

@@ -4,17 +4,19 @@
 #' @param sproj projected coordinate system of input UD
 #' @param probs probability contour(s) at which to generate the polygon
 #'
-#' @return
+#' @return sf polygons object representing isopleth contours of input UD
 #' @export
 #'
 #' @examples
+#'
 UD2sf = function(UD, sproj = NULL, probs = 0.95) {
+
+  isopleth <- plevel <- x <- NULL
 
   # derive isopleth contours
   p <- as.vector(calcHR(UD, p = probs, silent = T)$ps)
   if(any(p == 1)) p[p == 1] <- 1e-13
   fhat.contlines = lapply(p, function(i) grDevices::contourLines(x = UD$x1, y = UD$x2, z = UD$fhat, levels = i))
-  # if(length(fhat.contlines) == 1) fhat.contlines <- fhat.contlines[[1]]
 
   # convert to sf multipolygons object
   sldf <- lapply(fhat.contlines, function(contlines) {
@@ -26,9 +28,9 @@ UD2sf = function(UD, sproj = NULL, probs = 0.95) {
   spatpol <- do.call(rbind, lapply(1:length(sldf), function(i) {
     if(!inherits(sldf[[i]], 'try-error')) return(dplyr::bind_cols(sldf[[i]], isopleth = probs[i], plevel = p[i]))
   })) %>%
-    dplyr::filter(sf::st_is_valid(.)) %>%
+    dplyr::filter(sf::st_is_valid()) %>%
     dplyr::group_by(isopleth, plevel) %>%
-    dplyr::summarize(., .groups = 'drop') %>%
+    dplyr::summarize(.groups = 'drop') %>%
     dplyr::rename(geometry = x)
 
   return(spatpol)

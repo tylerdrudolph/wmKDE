@@ -2,30 +2,28 @@ Package: wmKDE
 Title: Weighted mean kernel density estimation
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "Tyler D.",
-           family = "Rudolph",
-           role = c("aut", "cre"),
-           email = "tylerdrudolph@gmail.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: Estimation of spatially and individually UD weighted mean bivariate population kernels
+    person("Tyler D.", "Rudolph", , "tylerdrudolph@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-2474-7830"))
+Description: Estimation of spatially and individually UD weighted mean
+    bivariate population kernels
 License: MIT + file LICENSE
-Encoding: UTF-8
-LazyData: true
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
-Imports: 
+URL: https://github.com/tylerdrudolph/wmKDE
+BugReports: https://github.com/tylerdrudolph/wmKDE/issues
+Imports:
+    dplyr,
     ks,
     methods,
-    parallelly,
     parallel,
-    terra,
+    parallelly,
     sf,
     shiny,
     stats,
     stringr,
-    dplyr
+    terra
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-URL: https://github.com/tylerdrudolph/wmKDE
-BugReports: https://github.com/tylerdrudolph/wmKDE/issues
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3

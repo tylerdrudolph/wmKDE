@@ -13,6 +13,9 @@ core.area(UD, plot = FALSE, silent = TRUE)
 
 \item{silent}{logical indicating whether or not to print messages (default = TRUE)}
 }
+\value{
+isopleth associated with core/intensive use area of input UD
+}
 \description{
 Derive the core area isopleth from a utilization distribution using the method described in Vander Wal & Rogers (2012).
 }

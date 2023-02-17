@@ -13,6 +13,9 @@ calcHR(est, p = c(0.5, 0.95), silent = TRUE)
 
 \item{silent}{logical indicating whether or not to print messages (default = TRUE)}
 }
+\value{
+probability density bin values associated with user-defined isopleths
+}
 \description{
 Function to calculate home range size and isopleth values corresponding to UD probability contours. Adapted from code shared by John Fieberg.
 }

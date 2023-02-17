@@ -35,7 +35,7 @@ wmKDE(
 
 \item{herd.grid}{optional specification of grid over which to estimate the UD. Default is kernel.grid(locs = st_coordinates(x), exp.range = 3, cell.size = spatres).}
 
-\item{bw.global}{logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions.}
+\item{bw.global}{logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions. Default uses plug-in method of bandwidth selection by default (alternative options not yet implemented).}
 
 \item{zscale}{logical indicating whether individual UD probability densities should be rescaled prior to cellwise averaging (recommended). Only applicable when avg = TRUE.}
 
@@ -52,6 +52,9 @@ wmKDE(
 \item{writeDir}{optional path to desired write folder location. Default is working directory.}
 
 \item{fileTag}{optional string to append to file name when export=TRUE.}
+}
+\value{
+list containing spatRaster object(s) of length equal to length(ktype) and one sf multipolygons object corresponding to isopleth and core area contours
 }
 \description{
 Estimate the mean utilization distribution (UD) of a wildlife population given GPS collar telemetry relocations derived from individually monitored sample animals.
