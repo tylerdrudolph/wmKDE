@@ -20,6 +20,7 @@
 #' @param ow logical; overwrite existing files?
 #' @param fileTag optional string to append to file name when export=TRUE.
 #' @param writeDir optional path to desired write folder location. Default is working directory.
+#' @param retObj logical; should result be returned into R environment?
 #'
 #' @return list containing spatRaster object(s) of length equal to length(ktype) and one sf multipolygons object corresponding to isopleth and core area contours
 #' @export
