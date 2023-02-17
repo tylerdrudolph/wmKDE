@@ -8,7 +8,7 @@
 #' @param id character
 #' @param nmin vector
 #'
-#' @return data.frame
+#' @return original df with specified filters applied
 #' @export
 #'
 #' @examples

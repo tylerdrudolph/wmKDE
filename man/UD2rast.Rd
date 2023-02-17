@@ -4,15 +4,15 @@
 \alias{UD2rast}
 \title{Convert a UD object to a RasterLayer object}
 \usage{
-UD2rast(UD, dcrs = NULL)
+UD2rast(UD, sproj = NULL)
 }
 \arguments{
-\item{UD}{input UD object; a list containing three elements named 'x1', 'x2' and 'fhat'.}
+\item{UD}{input utilization distribution (UD) object; a list containing three elements named 'x1', 'x2' and 'fhat'.}
 
-\item{dcrs}{projected coordinate system of the input UD.}
+\item{sproj}{projected coordinate system of the input UD.}
 }
 \value{
-RasterLayer object retaining original UD cell values at original xy grid cell locations.
+spatRaster object retaining original UD cell values at original xy grid cell locations.
 }
 \description{
 Convert a UD object to a RasterLayer object

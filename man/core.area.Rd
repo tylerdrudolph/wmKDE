@@ -4,17 +4,17 @@
 \alias{core.area}
 \title{Derive the core area isopleth from a utilization distribution using the method described in Vander Wal & Rogers (2012).}
 \usage{
-core.area(UD, plot = FALSE, silent = FALSE)
+core.area(UD, plot = FALSE, silent = TRUE)
 }
 \arguments{
 \item{UD}{list containing 3 elements: 'x1' (x coordinates), 'x2' (y coordinates) and 'fhat' (probability densities)}
 
 \item{plot}{logical indicating whether or not to print result}
 
-\item{silent}{logical indicating whether or not to print messages}
+\item{silent}{logical indicating whether or not to print messages (default = TRUE)}
 }
 \value{
-
+isopleth associated with core/intensive use area of input UD
 }
 \description{
 Derive the core area isopleth from a utilization distribution using the method described in Vander Wal & Rogers (2012).

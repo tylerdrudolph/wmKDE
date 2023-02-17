@@ -2,16 +2,18 @@
 % Please edit documentation in R/rast2UD.R
 \name{rast2UD}
 \alias{rast2UD}
-\title{Convert a RasterLayer object to a UD object}
+\title{Convert a spatRaster object to a list representing a UD (utilization distribution) object (list of x1, x2, fhat)}
 \usage{
-rast2UD(r)
+rast2UD(r, sproj = NULL)
 }
 \arguments{
-\item{r}{RasterLayer object}
+\item{r}{spatRaster object}
+
+\item{sproj}{projected CRS of input spatRaster}
 }
 \value{
-UD object retaining cell values of original RasterLayer object at original grid cell locations.
+UD object retaining cell values of original spatRaster object at original grid cell locations.
 }
 \description{
-Convert a RasterLayer object to a UD object
+Convert a spatRaster object to a list representing a UD (utilization distribution) object (list of x1, x2, fhat)
 }

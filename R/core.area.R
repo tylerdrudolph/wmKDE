@@ -1,20 +1,21 @@
 #' Derive the core area isopleth from a utilization distribution using the method described in Vander Wal & Rogers (2012).
 #'
 #' @param UD list containing 3 elements: 'x1' (x coordinates), 'x2' (y coordinates) and 'fhat' (probability densities)
-#' @param silent logical indicating whether or not to print messages
+#' @param silent logical indicating whether or not to print messages (default = TRUE)
 #' @param plot logical indicating whether or not to print result
 #'
-#' @return
+#' @return isopleth associated with core/intensive use area of input UD
 #' @export
 #'
 #' @examples
+#'
 core.area <- function(UD, plot=FALSE, silent=TRUE) {
 
   ## Generate sequence of isopleth volumes
   IVseq <- seq(0.01, 0.99, 0.01)
 
   ## Estimate contour levels and size within each isopleth
-  hrsum <- calcHR(UD, p = IVseq, silent=silent)
+  hrsum <- calcHR(UD, p = IVseq, silent = silent)
   kernel.areas <- c(hrsum$HR * 1e-6)
 
   ## Create a dataframe with the percent area (PA) and isopleth volume (IV) scaled from 0-1

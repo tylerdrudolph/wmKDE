@@ -9,9 +9,9 @@ kernel.grid(locs, exp.range = 3, cell.size)
 \arguments{
 \item{locs}{data.frame with columns 'x' and 'y' corresponding to projected spatial coordinates of relocations}
 
-\item{exp.range}{single integer defining the range expansion parameter ensuring sufficient area is available to fully estimate the population UD.}
+\item{exp.range}{single integer defining the range expansion parameter ensuring sufficient area is available to fully estimate the population UD (3 by default).}
 
-\item{cell.size}{desired cell resolution}
+\item{cell.size}{desired cell resolution (dx=dy)}
 }
 \value{
 Generates range.x and grid.size arguments required by KernSmooth::bkde2D.

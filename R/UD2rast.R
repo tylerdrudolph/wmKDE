@@ -1,18 +1,16 @@
-##########################################################################################
-## Convertir un objet de format UD en 'RasterLayer'
-##
-## Suppose un syst?me de coordonn?es g?ographiques projet?es en Qu?bec Lambert NAD 1983)
-
 #' Convert a UD object to a RasterLayer object
 #'
-#' @param UD input UD object; a list containing three elements named 'x1', 'x2' and 'fhat'.
-#' @param dcrs projected coordinate system of the input UD.
+#' @param UD input utilization distribution (UD) object; a list containing three elements named 'x1', 'x2' and 'fhat'.
+#' @param sproj projected coordinate system of the input UD.
 #'
-#' @return RasterLayer object retaining original UD cell values at original xy grid cell locations.
+#' @return spatRaster object retaining original UD cell values at original xy grid cell locations.
 #' @export
 #'
 #' @examples
-UD2rast = function(UD, dcrs=NULL) {
-  if('crs' %in% names(UD)) dcrs <- UD$crs
-  return(raster::raster(list(x=UD$x1, y=UD$x2, z=UD$fhat), crs=dcrs))
+#'
+UD2rast <- function(UD, sproj = NULL) {
+
+  return(terra::flip(rast(x = t(UD$fhat),
+                   extent = ext(min(UD$x1), max(UD$x1), min(UD$x2), max(UD$x2)),
+                   crs = sproj)))
 }
