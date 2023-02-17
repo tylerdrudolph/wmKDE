@@ -28,7 +28,7 @@ UD2sf = function(UD, sproj = NULL, probs = 0.95) {
   spatpol <- do.call(rbind, lapply(1:length(sldf), function(i) {
     if(!inherits(sldf[[i]], 'try-error')) return(dplyr::bind_cols(sldf[[i]], isopleth = probs[i], plevel = p[i]))
   })) %>%
-    dplyr::filter(sf::st_is_valid()) %>%
+    dplyr::filter(sf::st_is_valid(.)) %>%
     dplyr::group_by(isopleth, plevel) %>%
     dplyr::summarize(.groups = 'drop') %>%
     dplyr::rename(geometry = x)
