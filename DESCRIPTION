@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "tylerdrudolph@gmail.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: R package for estimating spatially and individually weighted mean population kernels
+Description: Estimation of spatially and individually UD weighted mean bivariate population kernels
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -27,3 +27,5 @@ Imports:
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+URL: https://github.com/tylerdrudolph/wmKDE
+BugReports: https://github.com/tylerdrudolph/wmKDE/issues
