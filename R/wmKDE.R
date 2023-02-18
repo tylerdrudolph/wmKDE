@@ -30,7 +30,8 @@
 wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = NULL,
                   bw.global = TRUE, zscale = TRUE, spatres = 1000, ktype = 'iso',
                   ncores = ifelse(avg, parallel::detectCores() - 1, 1),
-                  write2file = FALSE, ow = TRUE, writeDir = getwd(), fileTag = NULL) {
+                  write2file = FALSE, ow = TRUE, writeDir = getwd(), fileTag = NULL,
+                  retObj = TRUE) {
 
   X <- Y <- w <- layer <- isopleth <- geometry <- plevel <- NULL
 
@@ -49,7 +50,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
 
   if(!is.null(id)) {
     id <- match.arg(id, names(x), several.ok = F)
-    idvec <- pull(x, id) %>% as.character
+    idvec <- pull(x, id) %>% as.character()
   } else {
     idvec <- rep(1, nrow(x))
   }
@@ -62,14 +63,10 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
     wtvec <- rep(1, nrow(x))
   }
 
-  if(avg) {
-    if(!is.null(udw)) {
+  if(avg & !is.null(udw)) {
+    if(is.null(id)) stop("cannot apply UD weights when 'id' is not specified")
       if(!id %in% names(udw)) stop(paste0("No '", id, "' field in udw"))
-      if(any(!idvec %in% (unique(pull(udw, id) %>% as.character)))) stop(paste0(id, ' values missing from udw'))
-    } else {
-      udw <- data.frame(unique(idvec), w = rep(1, length(unique(idvec))))
-      names(udw)[1] <- id
-    }
+    if(any(!idvec %in% (unique(pull(udw, id) %>% as.character)))) stop(paste0(id, ' values missing from udw'))
   }
 
   ktype <- match.arg(ktype, c('iso', 'prob', 'vol'), several.ok = T)
@@ -89,6 +86,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
     if(avg) {
 
       ## Define the field serving to differentiate UDs
+      ncores <- min(ncores, length(unique(idvec)))
       message("Estimating ", length(unique(idvec)), " Utilization Distributions (UD) across ", ncores, ' threads...')
 
     } else {
@@ -114,10 +112,11 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
       }
 
       ## Derive the mean population UD (no weighting)
-      if(length(unique(pull(udw, w))) > 1) fileTag = 'weighted' else fileTag = 'weighted'
+      if(!is.null(udw)) fileTag = 'weighted' else fileTag = 'weighted'
       message(paste0("Deriving the ", fileTag, " mean population UD..."))
       if(spatres != 1000) message("Resampling to ", spatres, "m...")
-      wmKern <- wmUD(udList, w = udw$w[match(names(udList), pull(udw, id))], sproj = sproj, checksum =! zscale, silent = TRUE)
+      if(is.null(udw)) w <- rep(1, length(udList)) else w <- udw$w[match(names(udList), pull(udw, id))]
+      wmKern <- wmUD(udList, w = w, sproj = sproj, checksum =! zscale, silent = TRUE)
 
       if(zscale) wmKern$fhat <- wmKern$fhat / sum(wmKern$fhat) / spatres / spatres
 
@@ -144,7 +143,8 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
                        probs = sort(c(crit.core.isopleth, c(0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1))))
 
     ## Determine the % of points falling within individual isopleth boundaries, including core area
-    ftab <- terra::extract(UD2rast(wmKern, sproj), xy) %>% rename(plevel = layer)
+    ftab <- terra::extract(UD2rast(wmKern, sproj), xy)
+    names(ftab)[2] <- 'plevel'
     isopoly <- mutate(isopoly, pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
                       coreArea = ifelse(isopleth == crit.core.isopleth, TRUE, FALSE), .before = geometry)
 
@@ -180,30 +180,34 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
       cat("standard deviation =", round(stats::sd(table(idvec)), digits = 2), "\n")
       sink()
 
-      ## Export raster kernel(s)
-      retObj <- c()
+    }
+
+    ## Export raster kernel(s)
+    if(retObj) {
+
+      outlist <- c()
 
       if('iso' %in% ktype) {
-        terra::writeRaster(wmKernRast, filename = file.path(writeDir, paste0(fileTag, '_iso.tif')))
-        retObj <- c(retObj, iso = wmKernRast)
+        terra::writeRaster(wmKernRast, filename = file.path(writeDir, paste0(fileTag, '_iso.tif')), overwrite = ow)
+        outlist <- c(outlist, iso = wmKernRast)
       }
       if('prob' %in% ktype) {
-        terra::writeRaster(UD2rast(wmKern, sproj), filename = file.path(writeDir, paste0(fileTag, '_prob.tif')))
-        retObj <- c(retObj, prob = terra::crop(UD2rast(wmKern, sproj), wmKernRast))
+        terra::writeRaster(UD2rast(wmKern, sproj), filename = file.path(writeDir, paste0(fileTag, '_prob.tif')), overwrite = ow)
+        outlist <- c(outlist, prob = terra::crop(UD2rast(wmKern, sproj), wmKernRast))
       }
       if('vol' %in% ktype) {
-        terra::writeRaster(UD2rast(wmKern, sproj) * spatres * spatres, filename = file.path(writeDir, paste0(fileTag, '_vol.tif')))
-        retObj <- c(retObj, vol = terra::crop(UD2rast(wmKern, sproj) * spatres * spatres, wmKernRast))
+        terra::writeRaster(UD2rast(wmKern, sproj) * spatres * spatres, filename = file.path(writeDir, paste0(fileTag, '_vol.tif')), overwrite = ow)
+        outlist <- c(outlist, vol = terra::crop(UD2rast(wmKern, sproj) * spatres * spatres, wmKernRast))
       }
 
       ## Export isopleth contours
-      sf::st_write(isopoly, file.path(writeDir, paste0(fileTag, '_isopleth_contours.gpkg')))
-      retObj <- list(mwKDE = terra::rast(retObj), isocontours = isopoly)
+      sf::st_write(isopoly, file.path(writeDir, paste0(fileTag, '_isopleth_contours.gpkg')), delete_layer = ow, quiet = TRUE)
+      outlist <- list(wmKDE = terra::rast(outlist), isocontours = isopoly)
 
     }
 
   })
 
-  return(retObj)
+  if(retObj) return(outlist)
 
 }

@@ -43,4 +43,5 @@ core.area <- function(UD, plot=FALSE, silent=TRUE) {
   }
 
   return(cutval)
+
 }
