@@ -19,7 +19,8 @@ wmKDE(
   write2file = FALSE,
   ow = TRUE,
   writeDir = getwd(),
-  fileTag = NULL
+  fileTag = NULL,
+  retObj = TRUE
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ wmKDE(
 \item{writeDir}{optional path to desired write folder location. Default is working directory.}
 
 \item{fileTag}{optional string to append to file name when export=TRUE.}
+
+\item{retObj}{logical; should result be returned into R environment?}
 }
 \value{
 list containing spatRaster object(s) of length equal to length(ktype) and one sf multipolygons object corresponding to isopleth and core area contours
