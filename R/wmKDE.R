@@ -72,7 +72,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
   ktype <- match.arg(ktype, c('iso', 'prob', 'vol'), several.ok = T)
   if(!inherits(spatres, 'numeric')) stop('spatres must be numeric')
   if(length(spatres) > 1) {
-    message('length(spatres) > 1 but asymmetrical cells are not currently implemented. Only first argument will be used.')
+    message('length(spatres) > 1 but asymmetrical cells are not currently implemented. Only first element will be used.')
     spatres <- spatres[1]
   }
 
@@ -80,7 +80,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
   ptime <- system.time({
 
     ## Generate the spatial grid over which the UD(s) are to be estimated
-    if(is.null(herd.grid)) herd.grid <- kernel.grid(xy, exp.range = 3, cell.size = spatres)
+    if(is.null(herd.grid)) herd.grid <- wmKDE::kernel.grid(xy, exp.range = 3, cell.size = spatres)
 
     ## Deploy kernel estimation
     if(avg) {
@@ -96,8 +96,8 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
     }
 
     ## Deploy multiple UD estimations
-    udList <- bKDE(xy = xy, id = idvec, wts = wtvec, user.grid = herd.grid,
-                   bw.global = bw.global, ncores = ncores, verbose = FALSE)
+    udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, user.grid = herd.grid,
+                          bw.global = bw.global, ncores = ncores, verbose = FALSE)
 
     if(avg & length(udList) > 1) {
 
@@ -106,7 +106,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
 
         message("Rescaling density values...")
         udList <- lapply(udList, function(x) {
-          x$fhat <- range01(x$fhat * spatres * spatres)
+          x$fhat <- wmKDE::range01(x$fhat * spatres * spatres)
           return(x)
         })
 
@@ -117,7 +117,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
       message(paste0("Deriving the ", fileTag, " mean population UD..."))
       if(spatres != 1000) message("Resampling to ", spatres, "m...")
       if(is.null(udw)) w <- rep(1, length(udList)) else w <- udw$w[match(names(udList), pull(udw, id))]
-      wmKern <- wmUD(udList, w = w, sproj = sproj, checksum =! zscale, silent = TRUE)
+      wmKern <- wmKDE::wmUD(udList, w = w, sproj = sproj, checksum =! zscale, silent = TRUE)
 
       if(zscale) wmKern$fhat <- wmKern$fhat / sum(wmKern$fhat) / spatres / spatres
 
@@ -136,22 +136,22 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
                    # if(!is.null(fileTag)) stringr::str_c(fileTag, '_'),
                    spatres, "m")
 
-    crit.core.isopleth <- core.area(wmKern)
+    crit.core.isopleth <- wmKDE::core.area(wmKern)
 
     ############################################
     ## Extract isopleth polygons, including core/intensive use area
-    isopoly <- UD2sf(UD = wmKern, sproj = sproj,
-                       probs = sort(c(crit.core.isopleth, c(0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1))))
+    isopoly <- wmKDE::UD2sf(UD = wmKern, sproj = sproj,
+                            probs = sort(c(crit.core.isopleth, c(0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1))))
 
     ## Determine the % of points falling within individual isopleth boundaries, including core area
-    ftab <- terra::extract(UD2rast(wmKern, sproj), xy)
+    ftab <- terra::extract(wmKDE::UD2rast(wmKern, sproj), xy)
     names(ftab)[2] <- 'plevel'
     isopoly <- mutate(isopoly, pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
                       coreArea = ifelse(isopleth == crit.core.isopleth, TRUE, FALSE), .before = geometry)
 
     wmKernRast <- wmKern
     wmKernRast$fhat <- 100 - fhat2confin(wmKern$fhat)
-    wmKernRast <- UD2rast(wmKernRast, sproj)
+    wmKernRast <- wmKDE::UD2rast(wmKernRast, sproj)
     wmKernRast[wmKernRast < 0.05] <- NA
     wmKernRast <- terra::trim(wmKernRast)
 
@@ -161,7 +161,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
 
       ## Produce READ ME file
       sink(file.path(writeDir, "wmKDE_parameters.txt"))
-      cat('wmKDE: WEIGHTED MEAN KERNEL DENSITY ESTIMATION', '\n', '\n')
+      cat('wmKDE: WEIGHTED MEAN KERNEL DENSITY ESTIMATOR', '\n', '\n')
       cat('Maintained by: Tyler Rudolph (tylerdrudolph@gmail.com)', '\n')
       cat(paste0("System date/time: ", Sys.time()), '\n', '\n')
       cat('MODEL PARAMETERS:', '\n', '\n')
@@ -183,31 +183,24 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
 
     }
 
-    ## Export raster kernel(s)
-    if(retObj) {
-
-      outlist <- c()
-
-      if('iso' %in% ktype) {
-        terra::writeRaster(wmKernRast, filename = file.path(writeDir, paste0(fileTag, '_iso.tif')), overwrite = ow)
-        outlist <- c(outlist, iso = wmKernRast)
-      }
-      if('prob' %in% ktype) {
-        terra::writeRaster(UD2rast(wmKern, sproj), filename = file.path(writeDir, paste0(fileTag, '_prob.tif')), overwrite = ow)
-        outlist <- c(outlist, prob = terra::crop(UD2rast(wmKern, sproj), wmKernRast))
-      }
-      if('vol' %in% ktype) {
-        terra::writeRaster(UD2rast(wmKern, sproj) * spatres * spatres, filename = file.path(writeDir, paste0(fileTag, '_vol.tif')), overwrite = ow)
-        outlist <- c(outlist, vol = terra::crop(UD2rast(wmKern, sproj) * spatres * spatres, wmKernRast))
-      }
-
-      ## Export isopleth contours
-      sf::st_write(isopoly, file.path(writeDir, paste0(fileTag, '_isopleth_contours.gpkg')), delete_layer = ow, quiet = TRUE)
-      outlist <- list(wmKDE = terra::rast(outlist), isocontours = isopoly)
-
-    }
+    ## Prepare output objects
+    outlist <- list(wmKDE = terra::rast(list(iso = wmKernRast,
+                                             prob = terra::crop(wmKDE::UD2rast(wmKern, sproj), wmKernRast),
+                                             vol = terra::crop(wmKDE::UD2rast(wmKern, sproj) * spatres * spatres, wmKernRast)))[[ktype]],
+                    isocontours = isopoly)
 
   })
+
+  ## Export raster kernel(s) and corresponding isolines
+  if(write2file) {
+
+    ## Export final kernel
+    terra::writeRaster(outlist$wmKDE, filename = file.path(writeDir, paste0(fileTag, '.tif')), overwrite = ow)
+
+    ## Export isopleth contours
+    sf::st_write(isopoly, file.path(writeDir, paste0(fileTag, '_isopleth_contours.gpkg')), delete_layer = ow, quiet = TRUE)
+
+  }
 
   if(retObj) return(outlist)
 
