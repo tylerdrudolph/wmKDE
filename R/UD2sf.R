@@ -15,7 +15,7 @@ UD2sf = function(UD, sproj = NULL, probs = 0.95) {
 
   # derive isopleth contours
   p <- as.vector(calcHR(UD, p = probs, silent = T)$ps)
-  if(any(p == 1)) p[p == 1] <- 1e-13
+  if(any(probs == 1)) p[probs == 1] <- 1e-13
   fhat.contlines = lapply(p, function(i) grDevices::contourLines(x = UD$x1, y = UD$x2, z = UD$fhat, levels = i))
 
   # convert to sf multipolygons object

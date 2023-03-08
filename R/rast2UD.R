@@ -12,7 +12,8 @@ rast2UD <- function (r, sproj = NULL) {
 
   x <- terra::xFromCol(r, 1:ncol(r))
   y <- terra::yFromRow(r, nrow(r):1)
-  z <- t(terra::as.matrix(r)[nrow(r):1, ])
+  z <- t(terra::as.matrix(r, wide = TRUE)[nrow(r):1, ])
+  # z <- t(terra::as.matrix(r)[ncell(r):1, ])
   return(list(x1 = x, x2 = y, fhat = z, sproj = sproj))
 
 }

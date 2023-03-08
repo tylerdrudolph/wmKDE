@@ -96,7 +96,8 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
     }
 
     ## Deploy multiple UD estimations
-    udList <- bKDE(xy = xy, id = idvec, wts = wtvec, user.grid = herd.grid, bw.global = bw.global, ncores = ncores, verbose = FALSE)
+    udList <- bKDE(xy = xy, id = idvec, wts = wtvec, user.grid = herd.grid,
+                   bw.global = bw.global, ncores = ncores, verbose = FALSE)
 
     if(avg & length(udList) > 1) {
 
@@ -112,7 +113,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, herd.grid = 
       }
 
       ## Derive the mean population UD (no weighting)
-      if(!is.null(udw)) fileTag = 'weighted' else fileTag = 'weighted'
+      if(!is.null(udw)) fileTag = 'weighted' else fileTag = 'unweighted'
       message(paste0("Deriving the ", fileTag, " mean population UD..."))
       if(spatres != 1000) message("Resampling to ", spatres, "m...")
       if(is.null(udw)) w <- rep(1, length(udList)) else w <- udw$w[match(names(udList), pull(udw, id))]

@@ -45,7 +45,7 @@ wmUD = function(udList, w, sproj = NULL, silent = FALSE, dres = NULL, checksum =
   }
 
   # ensure values sum to 1
-  if(checksum) return(reweightUD(rast2UD(pstack), out=1)) else return(rast2UD(pstack))
+  if(checksum) return(reweightUD(rast2UD(pstack, sproj = sproj), out=1)) else return(rast2UD(pstack, sproj = sproj))
 
 }
 
