@@ -10,8 +10,8 @@ wmKDE(
   avg = TRUE,
   spw = NULL,
   udw = NULL,
-  herd.grid = NULL,
-  bw.global = TRUE,
+  popGrid = NULL,
+  bwGlobal = TRUE,
   zscale = TRUE,
   spatres = 1000,
   ktype = "iso",
@@ -20,7 +20,8 @@ wmKDE(
   ow = TRUE,
   writeDir = getwd(),
   fileTag = NULL,
-  retObj = TRUE
+  retObj = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -34,9 +35,9 @@ wmKDE(
 
 \item{udw}{optional 2-column data.frame containing individual UD weights. Must contain a field with name matching argument 'id' (one row per unique record) and a second field of weights entitled 'w'.}
 
-\item{herd.grid}{optional specification of grid over which to estimate the UD. Default is kernel.grid(locs = st_coordinates(x), exp.range = 3, cell.size = spatres).}
+\item{popGrid}{optional specification of grid over which to estimate the UD. Default is kernel.grid(locs = st_coordinates(x), exp.range = 3, cell.size = spatres).}
 
-\item{bw.global}{logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions. Default uses plug-in method of bandwidth selection by default (alternative options not yet implemented).}
+\item{bwGlobal}{logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions. Default uses plug-in method of bandwidth selection by default (alternative options not yet implemented).}
 
 \item{zscale}{logical indicating whether individual UD probability densities should be rescaled prior to cellwise averaging (recommended). Only applicable when avg = TRUE.}
 
@@ -55,6 +56,8 @@ wmKDE(
 \item{fileTag}{optional string to append to file name when export=TRUE.}
 
 \item{retObj}{logical; should result be returned into R environment?}
+
+\item{verbose}{logical; should status messages be printed?}
 }
 \value{
 list containing spatRaster object(s) of length equal to length(ktype) and one sf multipolygons object corresponding to isopleth and core area contours
