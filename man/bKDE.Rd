@@ -9,8 +9,8 @@ bKDE(
   id,
   wts = NULL,
   ncores = parallel::detectCores() - 1,
-  user.grid = NULL,
-  bw.global = TRUE,
+  userGrid = NULL,
+  bwGlobal = TRUE,
   write2file = FALSE,
   verbose = TRUE
 )
@@ -24,9 +24,9 @@ bKDE(
 
 \item{ncores}{number of threads (processes) over which to dispatch individual kernel density estimators.}
 
-\item{user.grid}{dimensions of the matrix over which the kernel will be estimated. Mandatory.}
+\item{userGrid}{dimensions of the matrix over which the kernel will be estimated. Mandatory.}
 
-\item{bw.global}{logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions.}
+\item{bwGlobal}{logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions.}
 
 \item{write2file}{logical indicating whether results should be written to file}
 
