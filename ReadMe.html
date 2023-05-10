@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Tyler Rudolph">
+<meta name="author" content="Tyler D. Rudolph">
 
 <title>ReadMe</title>
 <style>
@@ -87,16 +87,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </style>
 
 
-<script src="wmKDE_ReadMe_files/libs/clipboard/clipboard.min.js"></script>
-<script src="wmKDE_ReadMe_files/libs/quarto-html/quarto.js"></script>
-<script src="wmKDE_ReadMe_files/libs/quarto-html/popper.min.js"></script>
-<script src="wmKDE_ReadMe_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="wmKDE_ReadMe_files/libs/quarto-html/anchor.min.js"></script>
-<link href="wmKDE_ReadMe_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="wmKDE_ReadMe_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="wmKDE_ReadMe_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="wmKDE_ReadMe_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="wmKDE_ReadMe_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="ReadMe_files/libs/clipboard/clipboard.min.js"></script>
+<script src="ReadMe_files/libs/quarto-html/quarto.js"></script>
+<script src="ReadMe_files/libs/quarto-html/popper.min.js"></script>
+<script src="ReadMe_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="ReadMe_files/libs/quarto-html/anchor.min.js"></script>
+<link href="ReadMe_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="ReadMe_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="ReadMe_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="ReadMe_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="ReadMe_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -119,7 +119,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Tyler Rudolph </p>
+             <p>Tyler D. Rudolph </p>
           </div>
   </div>
     
@@ -145,39 +145,174 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="installation" class="level2">
 <h2 class="anchored" data-anchor-id="installation">Installation</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">'devtools'</span>)) {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">'devtools'</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">'devtools'</span>)) <span class="fu">install.packages</span>(<span class="st">'devtools'</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">'https://github.com/tylerdrudolph/wmKDE'</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(wmKDE)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">'https://github.com/tylerdrudolph/wmKDE'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">'dplyr'</span>)) <span class="fu">install.packages</span>(<span class="st">'dplyr'</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">'sf'</span>)) <span class="fu">install.packages</span>(<span class="st">'sf'</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">'terra'</span>)) <span class="fu">install.packages</span>(<span class="st">'terra'</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">warn =</span> <span class="sc">-</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="demonstration" class="level2">
 <h2 class="anchored" data-anchor-id="demonstration">Demonstration</h2>
-</section>
-<section id="running-code" class="level2">
-<h2 class="anchored" data-anchor-id="running-code">Running Code</h2>
-<p>When you click the <strong>Render</strong> button a document will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
+<p><strong>Case 1)</strong> Two individual point patterns with different centres of activity but identical dispersion (sd = 1) and sample size (n=500)</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>locs <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">1</span>, <span class="at">col=</span><span class="dv">8</span>, <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>), <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>)),</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">2</span>, <span class="at">col=</span><span class="dv">4</span>, <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>, <span class="at">mean=</span><span class="sc">-</span><span class="fl">3.5</span>), <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>, <span class="at">mean=</span><span class="sc">-</span><span class="fl">3.5</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(., <span class="at">coords=</span><span class="fu">c</span>(<span class="st">'x'</span>,<span class="st">'y'</span>), <span class="at">crs=</span><span class="fu">st_crs</span>(<span class="dv">6624</span>))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="do">## basic kernel (relocations pooled)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>bkern1 <span class="ot">&lt;-</span> <span class="fu">wmKDE</span>(locs, <span class="at">avg=</span>F, <span class="at">spatres=</span><span class="fl">0.1</span>, )</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="do">## mean kernel utilization distribution (identical result)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>mkern1 <span class="ot">&lt;-</span> <span class="fu">wmKDE</span>(locs, <span class="at">id=</span><span class="st">'id'</span>, <span class="at">ncores=</span><span class="dv">1</span>, <span class="at">avg=</span>T, <span class="at">spatres=</span><span class="fl">0.1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-<p>You can add options to executable code like this</p>
 <div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 4</code></pre>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## plot side by side</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(bkern1<span class="sc">$</span>wmKDE<span class="sc">$</span>iso, <span class="at">main=</span><span class="st">'Pooled Kernel </span><span class="sc">\n</span><span class="st"> n(ID1) = 500; n(ID2) = 500'</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(locs), <span class="at">pch=</span><span class="dv">20</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">col=</span>locs<span class="sc">$</span>col, <span class="at">add=</span>T)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern1<span class="sc">$</span>isocontours <span class="sc">%&gt;%</span> st_geometry, <span class="at">border=</span>grDevices<span class="sc">::</span><span class="fu">heat.colors</span>(<span class="fu">nrow</span>(bkern1<span class="sc">$</span>isocontours)), <span class="at">add=</span>T)  </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern1<span class="sc">$</span>wmKDE, <span class="at">main=</span><span class="st">'Mean Kernel </span><span class="sc">\n</span><span class="st"> n(ID1) = 500; n(ID2) = 500'</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(locs), <span class="at">pch=</span><span class="dv">20</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">col=</span>locs<span class="sc">$</span>col, <span class="at">add=</span>T)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern1<span class="sc">$</span>isocontours <span class="sc">%&gt;%</span> st_geometry, <span class="at">border=</span>grDevices<span class="sc">::</span><span class="fu">heat.colors</span>(<span class="fu">nrow</span>(mkern1<span class="sc">$</span>isocontours)), <span class="at">add=</span>T)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="ReadMe_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## 3-D volumes (identical)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">persp</span>(bkern1<span class="sc">$</span>wmKDE, <span class="at">main =</span> <span class="st">'Pooled Kernel </span><span class="sc">\n</span><span class="st"> n(ID1) = 500; n(ID2) = 500'</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">persp</span>(mkern1<span class="sc">$</span>wmKDE, <span class="at">main =</span> <span class="st">'Mean Kernel </span><span class="sc">\n</span><span class="st"> n(ID1) = 500; n(ID2) = 500'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="ReadMe_files/figure-html/unnamed-chunk-3-2.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>The <code>echo: false</code> option disables the printing of code (only output is displayed).</p>
+<p><strong>Case 2)</strong> Two individual point patterns with different centres of activity and unequal sample size</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>locs2 <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">1</span>, <span class="at">col=</span><span class="dv">8</span>, <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>), <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>)),</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                   <span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">2</span>, <span class="at">col=</span><span class="dv">4</span>, <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">100</span>, <span class="at">mean=</span><span class="sc">-</span><span class="fl">3.5</span>), <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">100</span>, <span class="at">mean=</span><span class="sc">-</span><span class="fl">3.5</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(., <span class="at">coords=</span><span class="fu">c</span>(<span class="st">'x'</span>,<span class="st">'y'</span>), <span class="at">crs=</span><span class="fu">st_crs</span>(<span class="dv">32198</span>))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="do">## pooled kernel</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>bkern2 <span class="ot">&lt;-</span> <span class="fu">wmKDE</span>(locs2, <span class="at">avg=</span>F, <span class="at">spatres=</span><span class="fl">0.1</span>, <span class="at">verbose=</span>F)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="do">## mean kernel (different results)</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>mkern2 <span class="ot">&lt;-</span> <span class="fu">wmKDE</span>(locs2, <span class="at">id=</span><span class="st">'id'</span>, <span class="at">ncores=</span><span class="dv">1</span>, <span class="at">avg=</span>T, <span class="at">spatres=</span><span class="fl">0.1</span>, <span class="at">verbose=</span>F)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="do">## plot estimates side by side</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(bkern2<span class="sc">$</span>wmKDE<span class="sc">$</span>iso, <span class="at">main=</span><span class="st">'Pooled Kernel </span><span class="sc">\n</span><span class="st"> n(ID1) = 500; n(ID2) = 100'</span>, <span class="at">legend=</span>F)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(locs2), <span class="at">pch=</span><span class="dv">20</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">col=</span>locs2<span class="sc">$</span>col, <span class="at">add=</span>T)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(bkern2<span class="sc">$</span>isocontours <span class="sc">%&gt;%</span> st_geometry, <span class="at">border=</span><span class="fu">heat.colors</span>(<span class="fu">nrow</span>(bkern2<span class="sc">$</span>isocontours)), <span class="at">add=</span>T)  </span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern2<span class="sc">$</span>wmKDE, <span class="at">main=</span><span class="st">'Mean Kernel </span><span class="sc">\n</span><span class="st"> n(ID1) = 500; n(ID2) = 100'</span>, <span class="at">legend=</span>F)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(locs2), <span class="at">pch=</span><span class="dv">20</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">col=</span>locs2<span class="sc">$</span>col, <span class="at">add=</span>T)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern2<span class="sc">$</span>isocontours <span class="sc">%&gt;%</span> st_geometry, <span class="at">border=</span><span class="fu">heat.colors</span>(<span class="fu">nrow</span>(mkern2<span class="sc">$</span>isocontours)), <span class="at">add=</span>T)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="ReadMe_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">## 3-D volumes (the mean UD correctly assigns equal weight to each UD)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">persp</span>(bkern2<span class="sc">$</span>wmKDE, <span class="at">main =</span> <span class="st">'Pooled Kernel </span><span class="sc">\n</span><span class="st"> n(ID1) = 500; n(ID2) = 100'</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">persp</span>(mkern2<span class="sc">$</span>wmKDE, <span class="at">main =</span> <span class="st">'Mean Kernel </span><span class="sc">\n</span><span class="st"> n(ID1) = 500; n(ID2) = 100'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="ReadMe_files/figure-html/unnamed-chunk-4-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p><strong>Case 3)</strong> Two individual point patterns with different centres of activity and identical sample sizes, but different degrees of spread (dispersion)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>locs3 <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">1</span>, <span class="at">col=</span><span class="dv">8</span>, <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>, <span class="at">sd=</span><span class="fl">0.25</span>), <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>, <span class="at">sd=</span><span class="fl">0.25</span>)),</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">2</span>, <span class="at">col=</span><span class="dv">4</span>, <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>, <span class="at">mean=</span><span class="sc">-</span><span class="fl">3.5</span>), <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>, <span class="at">mean=</span><span class="sc">-</span><span class="fl">3.5</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(., <span class="at">coords=</span><span class="fu">c</span>(<span class="st">'x'</span>,<span class="st">'y'</span>), <span class="at">crs=</span><span class="fu">st_crs</span>(<span class="dv">6624</span>))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="do">## pooled kernel</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>bkern3 <span class="ot">&lt;-</span> <span class="fu">wmKDE</span>(locs3, <span class="at">avg=</span>F, <span class="at">spatres=</span><span class="fl">0.1</span>, <span class="at">verbose=</span>F)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="do">## mean kernels with and without individual rescaling</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>mkern3a <span class="ot">&lt;-</span> <span class="fu">wmKDE</span>(locs3, <span class="at">id=</span><span class="st">'id'</span>, <span class="at">ncores=</span><span class="dv">1</span>, <span class="at">avg=</span>T, <span class="at">zscale=</span>F, <span class="at">spatres=</span><span class="fl">0.1</span>, <span class="at">verbose=</span>F)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>mkern3b <span class="ot">&lt;-</span> <span class="fu">wmKDE</span>(locs3, <span class="at">id=</span><span class="st">'id'</span>, <span class="at">ncores=</span><span class="dv">1</span>, <span class="at">avg=</span>T, <span class="at">zscale=</span>T, <span class="at">spatres=</span><span class="fl">0.1</span>, <span class="at">verbose=</span>F)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="do">## plot resulting estimates side by side</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>))</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(bkern3<span class="sc">$</span>wmKDE, <span class="at">legend=</span>F, <span class="at">main =</span> <span class="st">'Pooled Kernel </span><span class="sc">\n</span><span class="st"> sd(ID1) = 0.25; sd(ID2) = 2'</span>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(locs3), <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">pch=</span><span class="dv">20</span>, <span class="at">col=</span>locs<span class="sc">$</span>col, <span class="at">add=</span>T)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(bkern3<span class="sc">$</span>isocontours <span class="sc">%&gt;%</span> st_geometry, <span class="at">border=</span><span class="fu">heat.colors</span>(<span class="fu">nrow</span>(bkern3<span class="sc">$</span>isocontours)), <span class="at">add=</span>T)  </span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern3a<span class="sc">$</span>wmKDE, <span class="at">legend=</span>F, <span class="at">main =</span> <span class="st">'Mean Kernel w/o rescaling </span><span class="sc">\n</span><span class="st"> sd(ID1) = 0.25; sd(ID2) = 2'</span>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(locs3), <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">pch=</span><span class="dv">20</span>, <span class="at">col=</span>locs<span class="sc">$</span>col, <span class="at">add=</span>T)</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern3a<span class="sc">$</span>isocontours <span class="sc">%&gt;%</span> st_geometry, <span class="at">border=</span><span class="fu">heat.colors</span>(<span class="fu">nrow</span>(mkern3a<span class="sc">$</span>isocontours)), <span class="at">add=</span>T)  </span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern3b<span class="sc">$</span>wmKDE, <span class="at">legend=</span>F, <span class="at">main =</span> <span class="st">'Mean Kernel w/rescaling </span><span class="sc">\n</span><span class="st"> sd(ID1) = 0.25; sd(ID2) = 2'</span>)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(locs3), <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">pch=</span><span class="dv">20</span>, <span class="at">col=</span>locs<span class="sc">$</span>col, <span class="at">add=</span>T)</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern3b<span class="sc">$</span>isocontours <span class="sc">%&gt;%</span> st_geometry, <span class="at">border=</span><span class="fu">heat.colors</span>(<span class="fu">nrow</span>(mkern3b<span class="sc">$</span>isocontours)), <span class="at">add=</span>T)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="ReadMe_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="do">## 3-D volumes (rescaling correctly assigns equal weight to each UD)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">persp</span>(bkern3<span class="sc">$</span>wmKDE, <span class="at">main =</span> <span class="st">'Pooled Kernel </span><span class="sc">\n</span><span class="st"> sd(ID1) = 0.25; sd(ID2) = 2'</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">persp</span>(mkern3a<span class="sc">$</span>wmKDE, <span class="at">main =</span> <span class="st">'Mean Kernel w/o rescaling </span><span class="sc">\n</span><span class="st"> sd(ID1) = 0.25; sd(ID2) = 2'</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">persp</span>(mkern3b<span class="sc">$</span>wmKDE, <span class="at">main =</span> <span class="st">'Mean Kernel w/rescaling </span><span class="sc">\n</span><span class="st"> sd(ID1) = 0.25; sd(ID2) = 2'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="ReadMe_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p><strong>Case 4)</strong> Two individual point patterns with different centres of activity and degree of spread (dispersion) and identical sample size, with and without spatial weights</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>locs4 <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(<span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">1</span>, <span class="at">w =</span> <span class="fl">0.025</span>, <span class="at">col=</span><span class="dv">8</span>, <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">400</span>, <span class="at">mean=</span><span class="fl">1.75</span>, <span class="at">sd=</span><span class="fl">0.25</span>), <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">400</span>, <span class="at">mean=</span><span class="fl">1.75</span>, <span class="at">sd=</span><span class="fl">0.25</span>)),</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">1</span>, <span class="at">w =</span> <span class="dv">1</span>, <span class="at">col=</span><span class="dv">8</span>, <span class="at">x=</span><span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">100</span>, <span class="at">sd=</span><span class="fl">0.8</span>), <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">100</span>, <span class="at">sd=</span><span class="fl">0.8</span>)),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">2</span>, <span class="at">w =</span> <span class="dv">1</span>, <span class="at">col=</span><span class="dv">4</span>, <span class="at">x =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>, <span class="at">mean=</span><span class="sc">-</span><span class="fl">3.5</span>), <span class="at">y =</span> <span class="fu">rnorm</span>(<span class="at">n=</span><span class="dv">500</span>, <span class="at">mean=</span><span class="sc">-</span><span class="fl">3.5</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(., <span class="at">coords=</span><span class="fu">c</span>(<span class="st">'x'</span>,<span class="st">'y'</span>), <span class="at">crs=</span><span class="fu">st_crs</span>(<span class="dv">6624</span>))</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="do">## 4 a) basic kernel</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>bkern4 <span class="ot">&lt;-</span> <span class="fu">wmKDE</span>(locs4, <span class="at">avg=</span>F, <span class="at">spatres=</span><span class="fl">0.1</span>, <span class="at">verbose=</span>F)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="do">## 4 b) mean kernel, no rescaling</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>mkern4a <span class="ot">&lt;-</span> <span class="fu">wmKDE</span>(locs4, <span class="at">avg=</span>T, <span class="at">id=</span><span class="st">'id'</span>, <span class="at">spatres=</span><span class="fl">0.1</span>, <span class="at">ncores=</span><span class="dv">1</span>, <span class="at">verbose=</span>F)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="do">## 4 c) mean kernel w/spatial weights</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>mkern4b <span class="ot">&lt;-</span> <span class="fu">wmKDE</span>(locs4, <span class="at">avg=</span>T, <span class="at">id=</span><span class="st">'id'</span>, <span class="at">spw =</span> <span class="st">'w'</span>, <span class="at">spatres=</span><span class="fl">0.1</span>, <span class="at">ncores=</span><span class="dv">1</span>, <span class="at">verbose=</span>F)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="do">## 4 d) plot estimates side by side</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>))</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(bkern4<span class="sc">$</span>wmKDE, <span class="at">legend=</span>F, <span class="at">main =</span> <span class="st">'Pooled Kernel'</span>)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(locs4), <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">pch=</span><span class="dv">20</span>, <span class="at">col=</span>locs4<span class="sc">$</span>col, <span class="at">add=</span>T)</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(bkern4<span class="sc">$</span>isocontours <span class="sc">%&gt;%</span> st_geometry, <span class="at">border=</span><span class="fu">heat.colors</span>(<span class="fu">nrow</span>(bkern4<span class="sc">$</span>isocontours)), <span class="at">add=</span>T)  </span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern4a<span class="sc">$</span>wmKDE, <span class="at">legend=</span>F, <span class="at">main =</span> <span class="st">'Mean Kernel w/o spatial weights'</span>)</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(locs4), <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">pch=</span><span class="dv">20</span>, <span class="at">col=</span>locs<span class="sc">$</span>col, <span class="at">add=</span>T)</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern4a<span class="sc">$</span>isocontours <span class="sc">%&gt;%</span> st_geometry, <span class="at">border=</span><span class="fu">heat.colors</span>(<span class="fu">nrow</span>(mkern4a<span class="sc">$</span>isocontours)), <span class="at">add=</span>T)  </span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern4b<span class="sc">$</span>wmKDE, <span class="at">legend=</span>F, <span class="at">main =</span> <span class="st">'Mean Kernel w/spatial weights (w=0.025)'</span>)</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(locs4), <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">pch=</span><span class="dv">20</span>, <span class="at">col=</span>locs<span class="sc">$</span>col, <span class="at">add=</span>T)</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mkern4b<span class="sc">$</span>isocontours <span class="sc">%&gt;%</span> st_geometry, <span class="at">border=</span><span class="fu">heat.colors</span>(<span class="fu">nrow</span>(mkern4b<span class="sc">$</span>isocontours)), <span class="at">add=</span>T)  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="ReadMe_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">## 3-D</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>))</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">persp</span>(bkern4<span class="sc">$</span>wmKDE, <span class="at">main =</span> <span class="st">'Pooled Kernel'</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">persp</span>(mkern4a<span class="sc">$</span>wmKDE, <span class="at">main =</span> <span class="st">'Mean Kernel w/o spatial weights'</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">persp</span>(mkern4b<span class="sc">$</span>wmKDE, <span class="at">main =</span> <span class="st">'Mean Kernel w/spatial weights'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="ReadMe_files/figure-html/unnamed-chunk-6-2.png" class="img-fluid" width="672"></p>
+</div>
+</div>
 </section>
 
 
 <div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
 <ol>
-<li id="fn1"><p>Although current implementation requires a geo-spatially referenced vector feature input (sf object), this method can (and may eventually) be generalized to any comparable bivariate distribution problem.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn1"><p>Although current implementation requires a geo-spatially referenced vector feature input (sf) object, this method can (and may eventually) be generalized to any comparable bivariate distribution problem.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section></div></main>
 <!-- /main column -->
