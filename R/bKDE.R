@@ -51,7 +51,7 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
       kmat <- kde(tempxy, w=wt, H=H,
                       xmin = c(userGrid$range.x[[1]][1], userGrid$range.x[[2]][1]),
                       xmax = c(userGrid$range.x[[1]][2], userGrid$range.x[[2]][2]),
-                      gridsize = userGrid$grid.size[1])
+                      gridsize = userGrid$grid.size)
 
       kernelUDs = c(kernelUDs, list(list(x1 = kmat$eval.points[[1]], x2 = kmat$eval.points[[2]], fhat = kmat$estimate)))
 
