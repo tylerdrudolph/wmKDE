@@ -36,7 +36,7 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
       message("Estimating ", length(unique(id)), " unweighted utilization distributions...")
     }
   }
-
+  
   if(ncores == 1) {
 
     for(m in 1:length(levz)) {
@@ -51,7 +51,8 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
       kmat <- kde(tempxy, w=wt, H=H,
                       xmin = c(userGrid$range.x[[1]][1], userGrid$range.x[[2]][1]),
                       xmax = c(userGrid$range.x[[1]][2], userGrid$range.x[[2]][2]),
-                      gridsize = userGrid$grid.size)
+                      gridsize = userGrid$grid.size,
+                  density = TRUE)
 
       kernelUDs = c(kernelUDs, list(list(x1 = kmat$eval.points[[1]], x2 = kmat$eval.points[[2]], fhat = kmat$estimate)))
 
@@ -74,7 +75,8 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
       kmat <- ks::kde(tempxy, w=wt, H=H,
                   xmin = c(userGrid$range.x[[1]][1], userGrid$range.x[[2]][1]),
                   xmax = c(userGrid$range.x[[1]][2], userGrid$range.x[[2]][2]),
-                  gridsize = userGrid$grid.size[1])
+                  gridsize = userGrid$grid.size,
+                  density = T)
 
       return(list(x1=kmat$eval.points[[1]], x2=kmat$eval.points[[2]], fhat=kmat$estimate))
 

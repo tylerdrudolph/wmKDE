@@ -99,7 +99,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     ## Deploy multiple UD estimations
     udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid,
                           bwGlobal = bwGlobal, ncores = ifelse(avg, ncores, 1), verbose = FALSE)
-
+    
     if(avg & length(udList) > 1) {
 
       ## Rescale z values
