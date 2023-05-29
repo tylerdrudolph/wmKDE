@@ -143,13 +143,13 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     ## Extract isopleth polygons, including core/intensive use area
     isopoly <- wmKDE::UD2sf(UD = wmKern, sproj = sproj,
                             prob = sort(c(crit.core.isopleth, c(0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1))))
-
+    
     ## Determine the % of points falling within individual isopleth boundaries, including core area
     ftab <- terra::extract(wmKDE::UD2rast(wmKern, sproj), xy)
     names(ftab)[2] <- 'plevel'
     isopoly <- mutate(isopoly, pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
                       coreArea = ifelse(isopleth == crit.core.isopleth, TRUE, FALSE), .before = geometry) %>%
-      st_cast('MULTIPOLYGON')
+      sf::st_cast('MULTIPOLYGON')
 
     wmKernRast <- wmKern
     wmKernRast$fhat <- 100 - fhat2confin(wmKern$fhat)

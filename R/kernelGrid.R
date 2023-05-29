@@ -11,7 +11,7 @@
 #'
 #' @examples
 #'
-kernel.grid <- function(locs, exp.range = 3, cell.size) {
+kernelGrid <- function(locs, exp.range = 3, cell.size) {
   
   if(is.null(cell.size)) stop("must specify cell size!")
   
