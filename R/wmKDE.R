@@ -10,7 +10,7 @@
 #' @param avg logical indicating whether an averaged UD is desired. When avg=FALSE, only one kernel is generated using all relocations.
 #' @param spw optional numeric vector of spatial relocation weights, length of which must be equal to nrow(x). Weights will be rescaled if sum(spw) != nrow(x).
 #' @param udw optional 2-column data.frame containing individual UD weights. Must contain a field with name matching argument 'id' (one row per unique record) and a second field of weights entitled 'w'.
-#' @param popGrid optional specification of grid over which to estimate the UD. Default is kernel.grid(locs = st_coordinates(x), exp.range = 3, cell.size = spatres).
+#' @param popGrid optional specification of grid over which to estimate the UD. Default is kernelGrid(locs = x, exp.range = 3, cell.size = spatres).
 #' @param bwGlobal logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions. Default uses plug-in method of bandwidth selection by default (alternative options not yet implemented).
 #' @param zscale logical indicating whether individual UD probability densities should be rescaled prior to cellwise averaging (recommended). Only applicable when avg = TRUE.
 #' @param spatres vector of length 1 specifying the desired spatial resolution of the output UD in the x & y dimensions. Asymmetrical cells not implemented.
@@ -81,7 +81,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
   ptime <- system.time({
 
     ## Generate the spatial grid over which the UD(s) are to be estimated
-    if(is.null(popGrid)) popGrid <- wmKDE::kernel.grid(xy, exp.range = 3, cell.size = spatres)
+    if(is.null(popGrid)) popGrid <- wmKDE::kernelGrid(x, exp.range = 3, cell.size = spatres)
 
     ## Deploy kernel estimation
     if(avg) {
@@ -99,7 +99,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     ## Deploy multiple UD estimations
     udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid,
                           bwGlobal = bwGlobal, ncores = ifelse(avg, ncores, 1), verbose = FALSE)
-
+    
     if(avg & length(udList) > 1) {
 
       ## Rescale z values
@@ -143,13 +143,13 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     ## Extract isopleth polygons, including core/intensive use area
     isopoly <- wmKDE::UD2sf(UD = wmKern, sproj = sproj,
                             prob = sort(c(crit.core.isopleth, c(0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1))))
-
+    
     ## Determine the % of points falling within individual isopleth boundaries, including core area
     ftab <- terra::extract(wmKDE::UD2rast(wmKern, sproj), xy)
     names(ftab)[2] <- 'plevel'
     isopoly <- mutate(isopoly, pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
                       coreArea = ifelse(isopleth == crit.core.isopleth, TRUE, FALSE), .before = geometry) %>%
-      st_cast('MULTIPOLYGON')
+      sf::st_cast('MULTIPOLYGON')
 
     wmKernRast <- wmKern
     wmKernRast$fhat <- 100 - fhat2confin(wmKern$fhat)
