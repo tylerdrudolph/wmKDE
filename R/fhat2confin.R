@@ -5,8 +5,6 @@
 #' @return numeric vector of length(z) representing isopleths corresponding to input density values
 #' @export
 #'
-#' @examples
-#'
 fhat2confin <- function(z) {
   dimxy = dim(z)
   if(sum(z)!=1) z = z/sum(z)

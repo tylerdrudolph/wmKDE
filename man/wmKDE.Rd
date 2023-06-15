@@ -35,7 +35,7 @@ wmKDE(
 
 \item{udw}{optional 2-column data.frame containing individual UD weights. Must contain a field with name matching argument 'id' (one row per unique record) and a second field of weights entitled 'w'.}
 
-\item{popGrid}{optional specification of grid over which to estimate the UD. Default is kernelGrid(locs = st_coordinates(x), exp.range = 3, cell.size = spatres).}
+\item{popGrid}{optional specification of grid over which to estimate the UD. Default is kernelGrid(locs = x, exp.range = 3, cell.size = spatres).}
 
 \item{bwGlobal}{logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions. Default uses plug-in method of bandwidth selection by default (alternative options not yet implemented).}
 

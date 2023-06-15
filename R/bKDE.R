@@ -12,8 +12,6 @@
 #' @return list of UD objects (list of x1, x2, fhat) of length equal to length(unique(id))
 #' @export
 #'
-#' @examples
-#'
 bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
                  userGrid = NULL, bwGlobal = TRUE, write2file = FALSE,
                  verbose = TRUE) {

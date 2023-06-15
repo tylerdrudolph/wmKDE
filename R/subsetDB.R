@@ -11,8 +11,6 @@
 #' @return original df with specified filters applied
 #' @export
 #'
-#' @examples
-#'
 subsetDB <- function(df, pop=NULL, saison=NULL, sex=NULL, annee=NULL,
                      id=NULL, nmin=50) {
 

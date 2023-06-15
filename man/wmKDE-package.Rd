@@ -2,8 +2,8 @@
 % Please edit documentation in R/wmKDE-package.R
 \docType{package}
 \name{wmKDE-package}
-\alias{wmKDE}
 \alias{wmKDE-package}
+\alias{_PACKAGE}
 \title{wmKDE: Weighted mean kernel density estimation}
 \description{
 Estimation of spatially and individually UD weighted mean bivariate population kernels
@@ -20,4 +20,3 @@ Useful links:
 \strong{Maintainer}: Tyler D. Rudolph \email{tylerdrudolph@gmail.com} (\href{https://orcid.org/0000-0003-2474-7830}{ORCID})
 
 }
-\keyword{internal}

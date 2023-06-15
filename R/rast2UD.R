@@ -6,8 +6,6 @@
 #' @return UD object retaining cell values of original spatRaster object at original grid cell locations.
 #' @export
 #'
-#' @examples
-#'
 rast2UD <- function (r, sproj = NULL) {
 
   x <- terra::xFromCol(r, 1:ncol(r))

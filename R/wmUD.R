@@ -11,8 +11,6 @@
 #' @return weighted mean spatRaster object
 #' @export
 #'
-#' @examples
-#'
 wmUD = function(udList, w, sproj = NULL, silent = FALSE, dres = NULL, checksum = TRUE) {
 
   if(length(w) != length(udList)) stop("w must be of same length as udList")
