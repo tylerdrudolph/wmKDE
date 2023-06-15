@@ -7,8 +7,6 @@
 #' @return sf polygons object representing isopleth contours of input UD
 #' @export
 #'
-#' @examples
-#'
 UD2sf = function(UD, sproj = NULL, probs = 0.95) {
 
   isopleth <- plevel <- x <- NULL

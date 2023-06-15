@@ -6,8 +6,6 @@
 #' @return spatRaster object retaining original UD cell values at original xy grid cell locations.
 #' @export
 #'
-#' @examples
-#'
 UD2rast <- function(UD, sproj = NULL) {
 
   x <- expand.grid(x = UD$x1, y = UD$x2)

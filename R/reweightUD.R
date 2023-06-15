@@ -6,8 +6,6 @@
 #' @return original input UD with probabilities adjusted such that corresponding volumes sum to exactly 1
 #' @export
 #'
-#' @examples
-#'
 reweightUD <- function(UD, out=1) {
   cell.area = (sort(unique(UD$x1))[2] - sort(unique(UD$x1))[1]) * (sort(unique(UD$x2))[2] - sort(unique(UD$x2))[1])# (UD$x1[2]-UD$x1[1]) * (UD$x2[2]-UD$x2[1])
   mat = UD$fhat

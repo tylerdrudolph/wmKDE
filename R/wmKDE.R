@@ -26,8 +26,6 @@
 #' @return list containing spatRaster object(s) of length equal to length(ktype) and one sf multipolygons object corresponding to isopleth and core area contours
 #' @export
 #'
-#' @examples
-#'
 wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NULL,
                   bwGlobal = TRUE, zscale = TRUE, spatres = 1000, ktype = 'iso',
                   ncores = ifelse(avg, parallel::detectCores() - 1, 1),
@@ -118,7 +116,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
       if(verbose) message(paste0("Deriving the ", fileTag, " mean population UD..."))
       if(verbose & spatres != 1000) message("Resampling to ", spatres, "m...")
       if(is.null(udw)) w <- rep(1, length(udList)) else w <- udw$w[match(names(udList), pull(udw, id))]
-      wmKern <- wmKDE::wmUD(udList, w = w, sproj = sproj, checksum =! zscale, silent = TRUE)
+      wmKern <- wmKDE::wmUD(udList, w = w, sproj = sproj, checksum = !zscale, silent = TRUE)
 
       if(zscale) wmKern$fhat <- wmKern$fhat / sum(wmKern$fhat) / spatres / spatres
 

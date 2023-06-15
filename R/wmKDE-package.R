@@ -1,4 +1,4 @@
-#' @keywords internal
+#' @aliases wmKDE-package
 "_PACKAGE"
 
 ## usethis namespace: start

@@ -9,8 +9,6 @@
 #' @return Generates range.x and grid.size arguments required by KernSmooth::bkde2D.
 #' @export
 #'
-#' @examples
-#'
 kernelGrid <- function(locs, exp.range = 3, cell.size) {
   
   if(is.null(cell.size)) stop("must specify cell size!")
