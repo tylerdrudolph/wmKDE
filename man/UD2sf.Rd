@@ -4,7 +4,7 @@
 \alias{UD2sf}
 \title{Given a Utilization Distribution, generate polygon(s) corresponding to specified probability contours}
 \usage{
-UD2sf(UD, sproj = NULL, probs = 0.95)
+UD2sf(UD, sproj = NULL, probs = 0.95, spType = "poly")
 }
 \arguments{
 \item{UD}{object representing a Utilization Distribution. A list containing 3 elements: x (x1) and y (x2) coordinates, and corresponding density estimates (fhat)}
@@ -12,6 +12,8 @@ UD2sf(UD, sproj = NULL, probs = 0.95)
 \item{sproj}{projected coordinate system of input UD}
 
 \item{probs}{probability contour(s) at which to generate the polygon}
+
+\item{spType}{target output geometry type (sf object). Default is 'poly', otherwise 'line'.}
 }
 \value{
 sf polygons object representing isopleth contours of input UD
