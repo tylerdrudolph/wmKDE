@@ -18,7 +18,7 @@ UD2sf = function(UD, sproj = NULL, probs = 0.95, spType = 'poly') {
   fhat.contlines = lapply(p, function(i) grDevices::contourLines(x = UD$x1, y = UD$x2, z = UD$fhat, levels = i))
 
   # convert to sf multipolygons object
-  sldf <- lapply(fhat.contlines, function(contlines, spType = spType, sproj = sproj) {
+  sldf <- lapply(fhat.contlines, function(contlines) {
     suppressMessages(try(sf::st_as_sf(do.call('c', lapply(1:length(contlines), function(i) {
           if(spType == 'poly') {
             return(sf::st_sfc(sf::st_polygon(list(cbind(x = contlines[[i]]$x, y = contlines[[i]]$y))), crs = sproj))
