@@ -10,7 +10,6 @@ bKDE(
   wts = NULL,
   ncores = parallel::detectCores() - 1,
   userGrid = NULL,
-  bwType = c("pi", "silv", "scott"),
   bwGlobal = TRUE,
   write2file = FALSE,
   verbose = TRUE
@@ -26,8 +25,6 @@ bKDE(
 \item{ncores}{number of threads (processes) over which to dispatch individual kernel density estimators.}
 
 \item{userGrid}{dimensions of the matrix over which the kernel will be estimated. Mandatory.}
-
-\item{bwType}{specify bandwidth selection method. current options include plug-in ('pi' = ks::Hpi(); default argument), 'silv' (calls kernelboot::bw.silv()) and 'scott' (calls kernelboot::bw.scott()).}
 
 \item{bwGlobal}{logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions.}
 

@@ -5,7 +5,6 @@
 #' @param wts vector defining weights to be attributed to individual relocations. If the sum of relocation weights does not equal the sample size, weights are adjusted accordingly and a warning is issued.
 #' @param ncores number of threads (processes) over which to dispatch individual kernel density estimators.
 #' @param userGrid dimensions of the matrix over which the kernel will be estimated. Mandatory.
-#' @param bwType specify bandwidth selection method. current options include plug-in ('pi' = ks::Hpi(); default argument), 'silv' (calls kernelboot::bw.silv()) and 'scott' (calls kernelboot::bw.scott()).
 #' @param bwGlobal logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions.
 #' @param verbose logical indicating whether messages should be printed
 #' @param write2file logical indicating whether results should be written to file
@@ -14,10 +13,8 @@
 #' @export
 #'
 bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
-                 userGrid = NULL, bwType = c('pi','silv','scott'), bwGlobal = TRUE, 
-                 write2file = FALSE, verbose = TRUE) {
-  
-  bwType <- match.arg(bwType, choices = c('pi','silv','scott'), several.ok = F)
+                 userGrid = NULL, bwGlobal = TRUE, write2file = FALSE,
+                 verbose = TRUE) {
 
   if(nrow(xy) != length(id)) stop("id must be of length equal to nrow(xy)")
   if(is.null(wts)) {
@@ -48,11 +45,7 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
       ## kernel density estimation using with or without spatial weights (scaled to sum to 1)
       wt <- wts[id %in% levz[m]]
       wt <- length(wt) * wt / sum(wt)
-      bwSelect <- function(xyCoords, ...) {
-        if(bwType == 'pi') return(ks::Hpi(xyCoords))
-        if(bwType == 'silv') return(kernelboot::bw.silv(xyCoords)) else return(kernelboot::bw.scott(xyCoords))
-      }
-      if(bwGlobal) H <- bwSelect(xy) else H <- bwSelect(tempxy)
+      if(bwGlobal) H <- Hpi(xy) else H <- Hpi(tempxy)
       kmat <- kde(tempxy, w=wt, H=H,
                       xmin = c(userGrid$range.x[[1]][1], userGrid$range.x[[2]][1]),
                       xmax = c(userGrid$range.x[[1]][2], userGrid$range.x[[2]][2]),
