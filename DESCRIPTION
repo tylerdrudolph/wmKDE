@@ -11,6 +11,7 @@ URL: https://github.com/tylerdrudolph/wmKDE
 BugReports: https://github.com/tylerdrudolph/wmKDE/issues
 Imports:
     dplyr,
+    kernelboot,
     ks,
     methods,
     parallel,
