@@ -1,18 +1,27 @@
 # ReadMe
-
 Tyler D. Rudolph
 
 ## **wmKDE: Weighted Mean Kernel Density Estimation**
 
 ### Description
 
-Estimation of the weighted and un-weighted bivariate kernel probability density function for spatially explicit[1] population-level processes given repeated measures of individual sample units. May be used to estimate the utilization distribution of a wildlife or fish population monitored via satellite (e.g. GPS collar transmitters) or acoustic (e.g. PTT tags & receptor stations) data telemetry while accounting for individual variation in point sample size, dispersion and quality, thereby generating unbiased estimates of population distribution.
+Estimation of the weighted and un-weighted bivariate kernel probability
+density function for spatially explicit[^1] population-level processes
+given repeated measures of individual sample units. May be used to
+estimate the utilization distribution of a wildlife or fish population
+monitored via satellite (e.g. GPS collar transmitters) or acoustic
+(e.g. PTT tags & receptor stations) data telemetry while accounting for
+individual variation in point sample size, dispersion and quality,
+thereby generating unbiased estimates of population distribution.
 
 Two weighting strata are possible:
 
-1.  Individual sample observations (e.g. GPS relocations) may be weighted to reflect variation in positional accuracy (e.g. PDOP, HDOP) and/or datum quality;
+1.  Individual sample observations (e.g. GPS relocations) may be
+    weighted to reflect variation in positional accuracy (e.g. PDOP,
+    HDOP) and/or datum quality;
 
-2.  Individual kernel distributions may be weighted to reflect variation in input data sufficiency, representativity and/or reliability.
+2.  Individual kernel distributions may be weighted to reflect variation
+    in input data sufficiency, representativity and/or reliability.
 
 ## Installation
 
@@ -35,7 +44,8 @@ options(warn = -1)
 
 ## Demonstration
 
-**Case 1)** Two individual point patterns with different centres of activity but identical dispersion (sd = 1) and sample size (n=500)
+**Case 1)** Two individual point patterns with different centres of
+activity but identical dispersion (sd = 1) and sample size (n=500)
 
 ``` r
 locs <- bind_rows(data.frame(id = 1, col=8, x = rnorm(n=500), y = rnorm(n=500)),
@@ -61,7 +71,7 @@ plot(st_geometry(locs), pch=20, cex = 0.6, col=locs$col, add=T)
 plot(mkern1$isocontours %>% st_geometry, border=grDevices::heat.colors(nrow(mkern1$isocontours)), add=T)  
 ```
 
-![](ReadMe.markdown_strict_files/figure-markdown_strict/unnamed-chunk-3-1.png)
+![](ReadMe_files/figure-commonmark/unnamed-chunk-3-1.png)
 
 ``` r
 ## 3-D volumes (identical)
@@ -69,9 +79,10 @@ persp(bkern1$wmKDE, main = 'Pooled Kernel \n n(ID1) = 500; n(ID2) = 500')
 persp(mkern1$wmKDE, main = 'Mean Kernel \n n(ID1) = 500; n(ID2) = 500')
 ```
 
-![](ReadMe.markdown_strict_files/figure-markdown_strict/unnamed-chunk-3-2.png)
+![](ReadMe_files/figure-commonmark/unnamed-chunk-3-2.png)
 
-**Case 2)** Two individual point patterns with different centres of activity and unequal sample size
+**Case 2)** Two individual point patterns with different centres of
+activity and unequal sample size
 
 ``` r
 locs2 <- bind_rows(data.frame(id = 1, col=8, x = rnorm(n=500), y = rnorm(n=500)),
@@ -95,7 +106,7 @@ plot(st_geometry(locs2), pch=20, cex = 0.6, col=locs2$col, add=T)
 plot(mkern2$isocontours %>% st_geometry, border=heat.colors(nrow(mkern2$isocontours)), add=T)  
 ```
 
-![](ReadMe.markdown_strict_files/figure-markdown_strict/unnamed-chunk-4-1.png)
+![](ReadMe_files/figure-commonmark/unnamed-chunk-4-1.png)
 
 ``` r
 ## 3-D volumes (the mean UD correctly assigns equal weight to each UD)
@@ -103,9 +114,11 @@ persp(bkern2$wmKDE, main = 'Pooled Kernel \n n(ID1) = 500; n(ID2) = 100')
 persp(mkern2$wmKDE, main = 'Mean Kernel \n n(ID1) = 500; n(ID2) = 100')
 ```
 
-![](ReadMe.markdown_strict_files/figure-markdown_strict/unnamed-chunk-4-2.png)
+![](ReadMe_files/figure-commonmark/unnamed-chunk-4-2.png)
 
-**Case 3)** Two individual point patterns with different centres of activity and identical sample sizes, but different degrees of spread (dispersion)
+**Case 3)** Two individual point patterns with different centres of
+activity and identical sample sizes, but different degrees of spread
+(dispersion)
 
 ``` r
 locs3 <- bind_rows(data.frame(id = 1, col=8, x = rnorm(n=500, sd=0.25), y = rnorm(n=500, sd=0.25)),
@@ -135,7 +148,7 @@ plot(st_geometry(locs3), cex = 0.6, pch=20, col=locs$col, add=T)
 plot(mkern3b$isocontours %>% st_geometry, border=heat.colors(nrow(mkern3b$isocontours)), add=T)  
 ```
 
-![](ReadMe.markdown_strict_files/figure-markdown_strict/unnamed-chunk-5-1.png)
+![](ReadMe_files/figure-commonmark/unnamed-chunk-5-1.png)
 
 ``` r
 ## 3-D volumes (rescaling correctly assigns equal weight to each UD)
@@ -145,9 +158,11 @@ persp(mkern3a$wmKDE, main = 'Mean Kernel w/o rescaling \n sd(ID1) = 0.25; sd(ID2
 persp(mkern3b$wmKDE, main = 'Mean Kernel w/rescaling \n sd(ID1) = 0.25; sd(ID2) = 2')
 ```
 
-![](ReadMe.markdown_strict_files/figure-markdown_strict/unnamed-chunk-5-2.png)
+![](ReadMe_files/figure-commonmark/unnamed-chunk-5-2.png)
 
-**Case 4)** Two individual point patterns with different centres of activity and degree of spread (dispersion) and identical sample size, with and without spatial weights
+**Case 4)** Two individual point patterns with different centres of
+activity and degree of spread (dispersion) and identical sample size,
+with and without spatial weights
 
 ``` r
 locs4 <- dplyr::bind_rows(data.frame(id = 1, w = 0.025, col=8, x = rnorm(n=400, mean=1.75, sd=0.25), y = rnorm(n=400, mean=1.75, sd=0.25)),
@@ -179,7 +194,7 @@ plot(st_geometry(locs4), cex = 0.6, pch=20, col=locs$col, add=T)
 plot(mkern4b$isocontours %>% st_geometry, border=heat.colors(nrow(mkern4b$isocontours)), add=T)  
 ```
 
-![](ReadMe.markdown_strict_files/figure-markdown_strict/unnamed-chunk-6-1.png)
+![](ReadMe_files/figure-commonmark/unnamed-chunk-6-1.png)
 
 ``` r
 ## 3-D
@@ -189,6 +204,9 @@ persp(mkern4a$wmKDE, main = 'Mean Kernel w/o spatial weights')
 persp(mkern4b$wmKDE, main = 'Mean Kernel w/spatial weights')
 ```
 
-![](ReadMe.markdown_strict_files/figure-markdown_strict/unnamed-chunk-6-2.png)
+![](ReadMe_files/figure-commonmark/unnamed-chunk-6-2.png)
 
-[1] Although current implementation requires a geo-spatially referenced vector feature input (sf) object, this method can (and may eventually) be generalized to any comparable bivariate distribution problem.
+[^1]: Although current implementation requires a geo-spatially
+    referenced vector feature input (sf) object, this method can (and
+    may eventually) be generalized to any comparable bivariate
+    distribution problem.

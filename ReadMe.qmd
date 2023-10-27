@@ -3,7 +3,7 @@ title: "ReadMe"
 author: 
   name: "Tyler D. Rudolph"
   email: "tyler.rudolph@nrcan-rncan.gc.ca"
-format: md
+format: gfm
 editor: visual
 ---
 
@@ -45,7 +45,7 @@ options(warn = -1)
 
 **Case 1)** Two individual point patterns with different centres of activity but identical dispersion (sd = 1) and sample size (n=500)
 
-```{r}
+```{r, message = FALSE}
 #| output: false
 locs <- bind_rows(data.frame(id = 1, col=8, x = rnorm(n=500), y = rnorm(n=500)),
                   data.frame(id = 2, col=4, x = rnorm(n=500, mean=-3.5), y = rnorm(n=500, mean=-3.5))) %>%
