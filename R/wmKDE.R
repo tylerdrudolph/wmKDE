@@ -11,6 +11,7 @@
 #' @param spw optional numeric vector of spatial relocation weights, length of which must be equal to nrow(x). Weights will be rescaled if sum(spw) != nrow(x).
 #' @param udw optional 2-column data.frame containing individual UD weights. Must contain a field with name matching argument 'id' (one row per unique record) and a second field of weights entitled 'w'.
 #' @param popGrid optional specification of grid over which to estimate the UD. Default is kernelGrid(locs = x, exp.range = 3, cell.size = spatres).
+#' @param bwType specify bandwidth selection method. current options include plug-in ('pi' = ks::Hpi(); default argument), 'silv' (calls kernelboot::bw.silv()) and 'scott' (calls kernelboot::bw.scott()).
 #' @param bwGlobal logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions. Default uses plug-in method of bandwidth selection by default (alternative options not yet implemented).
 #' @param zscale logical indicating whether individual UD probability densities should be rescaled prior to cellwise averaging (recommended). Only applicable when avg = TRUE.
 #' @param spatres vector of length 1 specifying the desired spatial resolution of the output UD in the x & y dimensions. Asymmetrical cells not implemented.
@@ -27,6 +28,7 @@
 #' @export
 #'
 wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NULL,
+                  bwType = c('pi', 'silv', 'scott'),
                   bwGlobal = TRUE, zscale = TRUE, spatres = 1000, ktype = 'iso',
                   ncores = ifelse(avg, parallel::detectCores() - 1, 1),
                   write2file = FALSE, ow = TRUE, writeDir = getwd(), fileTag = NULL,
@@ -74,6 +76,8 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     message('length(spatres) > 1 but asymmetrical cells are not currently implemented. Only first element will be used.')
     spatres <- spatres[1]
   }
+  
+  bwType <- match.arg(bwType, choices = c('pi','silv','scott'), several.ok = F)
 
   ## Log system processing time
   ptime <- system.time({
@@ -95,7 +99,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     }
 
     ## Deploy multiple UD estimations
-    udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid,
+    udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid, bwType = bwType,
                           bwGlobal = bwGlobal, ncores = ifelse(avg, ncores, 1), verbose = FALSE)
     
     if(avg & length(udList) > 1) {
