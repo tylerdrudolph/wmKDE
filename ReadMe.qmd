@@ -2,7 +2,7 @@
 title: "ReadMe"
 author: 
   name: "Tyler D. Rudolph"
-  email: "tylerdrudolph@gmail.com"
+  email: "tyler.rudolph@nrcan-rncan.gc.ca"
 format: gfm
 editor: visual
 ---
@@ -57,7 +57,6 @@ bkern1 <- wmKDE(locs, avg=F, spatres=0.1, )
 ## mean kernel utilization distribution (identical result)
 mkern1 <- wmKDE(locs, id='id', ncores=1, avg=T, spatres=0.1)
 ```
-
 ```{r}
 ## plot side by side
 par(mfrow=c(1,2))
@@ -75,7 +74,7 @@ persp(mkern1$wmKDE, main = 'Mean Kernel \n n(ID1) = 500; n(ID2) = 500')
 
 ```
 
-**Case 2)** Two individual point patterns with different centres of activity and unequal sample size
+**Case 2)** Two individual point patterns with different centres of activity and unequal sample size   
 
 ```{r}
 locs2 <- bind_rows(data.frame(id = 1, col=8, x = rnorm(n=500), y = rnorm(n=500)),
@@ -103,7 +102,7 @@ persp(bkern2$wmKDE, main = 'Pooled Kernel \n n(ID1) = 500; n(ID2) = 100')
 persp(mkern2$wmKDE, main = 'Mean Kernel \n n(ID1) = 500; n(ID2) = 100')
 ```
 
-**Case 3)** Two individual point patterns with different centres of activity and identical sample sizes, but different degrees of spread (dispersion)
+**Case 3)** Two individual point patterns with different centres of activity and identical sample sizes, but different degrees of spread (dispersion)   
 
 ```{r}
 locs3 <- bind_rows(data.frame(id = 1, col=8, x = rnorm(n=500, sd=0.25), y = rnorm(n=500, sd=0.25)),
@@ -139,7 +138,7 @@ persp(mkern3a$wmKDE, main = 'Mean Kernel w/o rescaling \n sd(ID1) = 0.25; sd(ID2
 persp(mkern3b$wmKDE, main = 'Mean Kernel w/rescaling \n sd(ID1) = 0.25; sd(ID2) = 2')
 ```
 
-**Case 4)** Two individual point patterns with different centres of activity and degree of spread (dispersion) and identical sample size, with and without spatial weights
+**Case 4)** Two individual point patterns with different centres of activity and degree of spread (dispersion) and identical sample size, with and without spatial weights   
 
 ```{r}
 locs4 <- dplyr::bind_rows(data.frame(id = 1, w = 0.025, col=8, x = rnorm(n=400, mean=1.75, sd=0.25), y = rnorm(n=400, mean=1.75, sd=0.25)),
