@@ -2,7 +2,7 @@
 title: "ReadMe"
 author: 
   name: "Tyler D. Rudolph"
-  email: "tyler.rudolph@nrcan-rncan.gc.ca"
+  email: "tylerdrudolph@gmail.com"
 format: gfm
 editor: visual
 ---
