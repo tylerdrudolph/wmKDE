@@ -3,10 +3,11 @@
 #' @param x 'sf' class object whose coordinates correspond to individual acoustic telemetry locations. x must be in a projected coordinate system and must contain a field name assigned to argument 'id' when avg = TRUE.
 #' @param id optional character vector indicating column name corresponding to unique tag ID from which each location was detected by a receptor. Must be provided when avg = TRUE.
 #' @param bath 'sf' class POLYGON or MULTIPOLYGON object whose boundaries correspond to the water body under study (required).
+#' @param avg logical indicating whether an averaged UD is desired. When avg = FALSE, only one kernel is generated using all detections.
 #' @param spatres size of lattice mesh in metres (numeric of length 1)
 #' @param udw optional 2-column data.frame containing individual UD weights. Must contain a field with name matching argument 'id' (one row per unique record) and a second field of weights entitled 'w'.
 #' @param zscale logical indicating whether individual UD probability densities should be rescaled prior to cellwise averaging (recommended). Only applicable when avg = TRUE.
-#' @param ktype character vector indicating type of kernel value to return. Options are 'iso' = isopleth contours (default, higher values indicate greater probability); 'prob' = UD probabilities; 'vol' = UD volumes (sum to 1). Multiple arguments are accepted.
+#' @param ktype character vector indicating type of kernel value to return. Options are 'iso' = isopleth contours (default, higher values indicate greater probability); 'prob' = UD probabilities; and 'vol' = UD volumes (sum to 1). Multiple arguments are accepted.
 #' @param ncores integer indicating the number of parallel processes (threads) over which to execute the estimation of individual UDs. Defaults to parallelly::availableCores()-1 when avg = TRUE, otherwise 1.
 #' @param write2file logical; write results to file?
 #' @param ow logical; overwrite existing files?
@@ -15,17 +16,19 @@
 #' @param retObj logical; should result be returned into R environment?
 #' @param verbose logical; should status messages be printed?
 #' 
-#' @return  list containing 1) spatRaster object(s) of length equal to length(ktype), 2) one sf multipolygons object corresponding to isopleth, 3) core area contours and 4)
+#' @return  list containing 1) spatRaster object(s) of length equal to length(ktype), 2) one sf multipolygons object corresponding to isopleth, 3) core area contours and 4) 
 #' @export
 #' 
-wmLDK <- function(x, id = NULL, bath, spatres = 10, udw = NULL, zscale = T,
-                  ktype = c('iso','prob','vol'), ncores = ifelse(avg, parallelly::availableCores() - 1, 1),
+wmLDK <- function(x = NULL, id = NULL, bath = NULL, avg = TRUE, spatres = 10, udw = NULL, zscale = T,
+                  ktype = c('iso','prob'), ncores = ifelse(avg, parallelly::availableCores() - 1, 1),
                   write2file = F, ow = F, fileTag = NULL, writeDir = getwd(), 
                   retObj = T, verbose = T) {
   
   Require::Require(c('dplyr','stringr','sf','latticeDensity','terra','wmKDE'))
   
-  if(!is.null(id)) id <- match.arg(id, names(x), several.ok = F)
+  if(avg) {
+    if(!is.null(id)) id <- match.arg(id, names(x), several.ok = F) else stop("Argument 'id' was not defined")
+  }
   
   ## Create the estimation surface
   nodeFillingOutput <- nodeFilling(poly = slot(slot(slot(as_Spatial(bath), "polygons")[[1]],"Polygons")[[1]],"coords"), 
@@ -43,7 +46,11 @@ wmLDK <- function(x, id = NULL, bath, spatres = 10, udw = NULL, zscale = T,
   
   ## Create a temporary raster for each individual point pattern
   # dir.create(file.path(writeDir,'tmp'))
-  idList <- unique(pull(x, id))
+  if(avg) {
+    idList <- pull(x, id)
+  } else {
+    idList <- rep(1, nrow(x))
+  }
   # lapply(1:length(idList), function(i) {
   #   if(verbose) cat('i = ', i, '\n')
   #   saveRDS(as.data.frame(mask(rasterize(x = dplyr::filter(x, !!as.name(id) == idList[i]),
@@ -51,20 +58,25 @@ wmLDK <- function(x, id = NULL, bath, spatres = 10, udw = NULL, zscale = T,
   #             rename(n = sum), file = paste0(writeDir, '/tmp/tempRast_', i, '.rds'))
   # })
   
+  ncores <- min(c(length(unique(idList)), parallelly::availableCores() - 1))
   cl <- parallelly::makeClusterPSOCK(ncores, default_packages = c('terra','sf','dplyr','latticeDensity','Require'))
-  parallel::clusterExport(cl, varlist = c('x','id','idList','fish.grid','bath','formLatticeOutput'), envir = environment())
+  parallel::clusterExport(cl, varlist = c('x','id','avg','idList','fish.grid','bath','formLatticeOutput'), envir = environment())
   
   system.time({
     
-    latticeKernels <- parallel::parLapply(cl, 1:length(idList), function(i) {
+    latticeKernels <- parallel::parLapply(cl, 1:length(unique(idList)), function(i) {
       
       ## subset individual point pattern
-      df.id <- dplyr::filter(df, !!as.name(id) == idList[i])
+      if(avg) {
+        df.id <- dplyr::filter(x, !!as.name(id) == unique(idList[i]))
+      } else {
+        df.id <- df
+      }
       
-      ## retrieve points per grid cell
-      # id.grid <- readRDS(paste0(writeDir, '/tmp/tempRast_', i, '.rds'))
-      id.grid <- as.data.frame(mask(rasterize(x = dplyr::filter(x, !!as.name(id) == idList[i]),
-                                              y = fish.grid, fun = 'sum', background = 0), vect(bath)), xy = TRUE) %>%
+      ## retrieve # detections per grid cell
+      id.grid <- as.data.frame(mask(rasterize(x = df.id, y = fish.grid, 
+                                              fun = 'sum', background = 0), vect(bath)), 
+                               xy = TRUE) %>%
         rename(n = sum)
       
       ## Determine the optimal # steps in the random walk
@@ -80,7 +92,7 @@ wmLDK <- function(x, id = NULL, bath, spatres = 10, udw = NULL, zscale = T,
       
     })
     
-    names(latticeKernels) <- idList
+    names(latticeKernels) <- unique(idList)
     parallel::stopCluster(cl)
     
     sumtab <- cbind.data.frame(id = names(latticeKernels), 
@@ -97,7 +109,7 @@ wmLDK <- function(x, id = NULL, bath, spatres = 10, udw = NULL, zscale = T,
                                              crs = st_crs(bath)$wkt), values = 0), width=100)
     NAflag(resamp.grid) <- FALSE
     
-    ##
+    ## Convert to spatRaster and resample for viewing quality 
     kernRastList <- rast(lapply(1:length(latticeKernels), function(i) {
       
       x <- latticeKernels[[i]]
@@ -126,26 +138,32 @@ wmLDK <- function(x, id = NULL, bath, spatres = 10, udw = NULL, zscale = T,
       
     }))
     
-    ## ! A FAIRE !
-    # wKernz <- lapply(unique(rtab$week), function(p) {
-    #   x <- lapply(c('SAFO','SAOQ'), function(spp) {
-    #     mKern <- weighted.mean(x = kernRasterList[[rtab$week == p & rtab$Espece == spp]], w = rtab$poids[rtab$week == p & rtab$Espece == spp], na.rm = T)
-    #     isocore <- core.area(wmKDE::rast2UD(mKern))
-    #     isolines <- UD2sf(UD = rast2UD(mKern, sproj = st_crs(df)$wkt), sproj = st_crs(df), 
-    #                       probs = c(isocore, c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 1)), 
-    #                       spType = 'line') %>%
-    #       mutate(coreArea = ifelse(isopleth == isocore, TRUE, FALSE), .after = plevel) %>%
-    #       arrange(isopleth)
-    #     values(mKern) <- 100 - fhat2confin(values(mKern))
-    #     # plot(mKern, breaks = 10, main = paste(p, '-', spp))
-    #     # plot(isolines %>% st_geometry, col = ifelse(isolines$coreArea, 'red', 'darkgrey'), add = T)
-    #     return(list(mkern = mKern, isolines = isolines))
-    #   })
-    #   names(x) <- c('SAFO','SAOQ')
-    #   return(x)
-    # })
-    # names(wKernz) <- unique(rtab$week)
+    ## Calculate (weighted) mean Utilization DistributionD
+    if(is.null(udw)) {
+      mKern <- mean(kernRastList, na.rm = TRUE)
+    } else {
+      mKern <- weighted.mean(x = kernRasterList, w = udw$w[match(names(kernRasterList), udw[,id])], na.rm = TRUE)
+    }
     
+    ## Estimate core area isopleth and generate isolines
+    isocore <- core.area(wmKDE::rast2UD(mKern))
+    isolines <- UD2sf(UD = rast2UD(mKern, sproj = st_crs(df)$wkt), sproj = st_crs(df), 
+                      probs = c(isocore, c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 1)), 
+                      spType = 'line') %>%
+      mutate(coreArea = ifelse(isopleth == isocore, TRUE, FALSE), .after = plevel) %>%
+      arrange(isopleth)
+    
+    mKern <- c(iso = mKern, prob = mKern, vol = mKern)
+    values(mKern$iso) <- 100 - fhat2confin(values(mKern$iso))
+    values(mKern$prob) <- values(mKern$vol) / res(mKern$vol)[1] / res(mKern$vol)[2]
+    
+    ## Visualize (optional)
+    if(FALSE) {
+      plot(mKern, breaks = 10)
+      plot(isolines %>% st_geometry, col = ifelse(isolines$coreArea, 'red', 'darkgrey'), add = T)
+    }
+    
+    return(list(mkern = mKern, isolines = isolines, xval = sumtab))
     
   })
   
