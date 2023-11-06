@@ -17,6 +17,7 @@
 #' @param spatres vector of length 1 specifying the desired spatial resolution of the output UD in the x & y dimensions. Asymmetrical cells not implemented.
 #' @param ktype character vector indicating type of kernel value to return. Options are 'iso' = isopleth contours (default, higher values indicate greater probability); 'prob' = UD probabilities; 'vol' = UD volumes (sum to 1). Multiple arguments are accepted.
 #' @param ncores integer indicating the number of parallel processes (threads) over which to execute the estimation of individual UDs. Defaults to detectCores()-1 when avg = TRUE, otherwise 1.
+#' @param trim logical; should outer NA cells be excluded, where applicable, from the kernel raster?
 #' @param write2file logical; write results to file?
 #' @param ow logical; overwrite existing files?
 #' @param fileTag optional string to append to file name when export=TRUE.
@@ -31,7 +32,8 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
                   bwType = c('pi', 'silv', 'scott'),
                   bwGlobal = TRUE, zscale = TRUE, spatres = 1000, ktype = 'iso',
                   ncores = ifelse(avg, parallel::detectCores() - 1, 1),
-                  write2file = FALSE, ow = TRUE, writeDir = getwd(), fileTag = NULL,
+                  trim = TRUE, write2file = FALSE, ow = TRUE, 
+                  writeDir = getwd(), fileTag = NULL,
                   retObj = TRUE, verbose = TRUE) {
 
   X <- Y <- w <- layer <- isopleth <- geometry <- plevel <- NULL
@@ -157,7 +159,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     wmKernRast$fhat <- 100 - fhat2confin(wmKern$fhat)
     wmKernRast <- wmKDE::UD2rast(wmKernRast, sproj)
     wmKernRast[wmKernRast < 0.05] <- NA
-    wmKernRast <- terra::trim(wmKernRast)
+    if(trim) wmKernRast <- terra::trim(wmKernRast)
 
     ## Prepare output objects
     outlist <- list(wmKDE = terra::rast(list(iso = wmKernRast,

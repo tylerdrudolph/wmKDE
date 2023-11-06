@@ -24,39 +24,39 @@ wmLDK <- function(x = NULL, id = NULL, bath = NULL, avg = TRUE, spatres = 10, ud
                   write2file = F, ow = F, fileTag = NULL, writeDir = getwd(), 
                   retObj = T, verbose = T) {
   
-  Require::Require(c('dplyr','stringr','sf','latticeDensity','terra','wmKDE'))
+  df <- isopleth <- kernRasterList <- plevel <- NULL
   
   if(avg) {
     if(!is.null(id)) id <- match.arg(id, names(x), several.ok = F) else stop("Argument 'id' was not defined")
   }
   
   ## Create the estimation surface
-  nodeFillingOutput <- nodeFilling(poly = slot(slot(slot(as_Spatial(bath), "polygons")[[1]],"Polygons")[[1]],"coords"), 
-                                   node_spacing = spatres)
+  if(names(sort(table(st_geometry_type(bath)), decreasing=T)[1]) == 'LINESTRING') bath <- st_cast(bath, 'POLYGON')
+  bath <- bath %>% summarize %>% st_make_valid
+  bathcoord <- as.data.frame(st_coordinates(bath))
+  nodeFillingOutput <- latticeDensity::nodeFilling(poly = sf::st_cast(bath, 'POLYGON') %>% 
+                                                     st_make_valid %>% 
+                                                     summarize %>% 
+                                                     st_coordinates,
+                                                   node_spacing = spatres)
   
   ## Create the node neighbourhood structure
-  formLatticeOutput <- formLattice(nodeFillingOutput)
-  refbox <- st_bbox(bath)
-  fish.grid <- rasterize(x = st_as_sf(bath), 
-                         y = rast(xmin = refbox['xmin'], xmax = refbox['xmax'], 
-                                  ymin = refbox['ymin'], ymax = refbox['ymax'],
-                                  res = rep(spatres, 2), 
-                                  crs = st_crs(bath)$wkt),
-                         field = 0)
+  formLatticeOutput <- latticeDensity::formLattice(nodeFillingOutput)
+  refbox <- sf::st_bbox(bath)
+  fish.grid <- terra::rasterize(x = sf::st_as_sf(bath), 
+                                y = terra::rast(xmin = refbox['xmin'], xmax = refbox['xmax'], 
+                                                ymin = refbox['ymin'], ymax = refbox['ymax'],
+                                                res = rep(spatres, 2), 
+                                                crs = sf::st_crs(bath)$wkt),
+                                field = 0)
   
   ## Create a temporary raster for each individual point pattern
   # dir.create(file.path(writeDir,'tmp'))
   if(avg) {
-    idList <- pull(x, id)
+    idList <- dplyr::pull(x, id)
   } else {
     idList <- rep(1, nrow(x))
   }
-  # lapply(1:length(idList), function(i) {
-  #   if(verbose) cat('i = ', i, '\n')
-  #   saveRDS(as.data.frame(mask(rasterize(x = dplyr::filter(x, !!as.name(id) == idList[i]),
-  #                                        y = fish.grid, fun = 'sum', background = 0), vect(bath)), xy = TRUE) %>%
-  #             rename(n = sum), file = paste0(writeDir, '/tmp/tempRast_', i, '.rds'))
-  # })
   
   ncores <- min(c(length(unique(idList)), parallelly::availableCores() - 1))
   cl <- parallelly::makeClusterPSOCK(ncores, default_packages = c('terra','sf','dplyr','latticeDensity','Require'))
@@ -74,19 +74,25 @@ wmLDK <- function(x = NULL, id = NULL, bath = NULL, avg = TRUE, spatres = 10, ud
       }
       
       ## retrieve # detections per grid cell
-      id.grid <- as.data.frame(mask(rasterize(x = df.id, y = fish.grid, 
-                                              fun = 'sum', background = 0), vect(bath)), 
-                               xy = TRUE) %>%
-        rename(n = sum)
+      id.grid <- terra::as.data.frame(
+        terra::mask(
+          terra::rasterize(x = df.id, y = fish.grid, 
+                           fun = 'sum', background = 0), 
+          terra::vect(bath)), 
+        xy = TRUE) %>%
+        dplyr::rename(n = sum)
       
       ## Determine the optimal # steps in the random walk
-      xval <- crossvalNparReg(formLatticeOutput,
+      xval <- latticeDensity::crossvalNparReg(formLatticeOutput,
                               Z = id.grid$n,
                               PointPattern = id.grid[, c('x','y')],
                               M = 0.5, max_steps = 10)
       
       ## Estimate continuous surface using lattice-based non-parametric regression (facultatif)
-      tarp <- createNparReg(formLatticeOutput, Z = id.grid$n, PointPattern = id.grid[, c("x","y")], M = 0.5, k = xval$k)
+      tarp <- latticeDensity::createNparReg(formLatticeOutput, 
+                                            Z = id.grid$n, 
+                                            PointPattern = id.grid[, c("x","y")], 
+                                            M = 0.5, k = xval$k)
       
       return(list(tarp = tarp, xval = xval))
       
@@ -96,43 +102,47 @@ wmLDK <- function(x = NULL, id = NULL, bath = NULL, avg = TRUE, spatres = 10, ud
     parallel::stopCluster(cl)
     
     sumtab <- cbind.data.frame(id = names(latticeKernels), 
-                     t(sapply(latticeKernels, function(x) data.frame(k=x[[2]]$k, Sumsq=min(x[[2]]$SumSq))))) %>%
+                     t(sapply(latticeKernels, function(x) {
+                       data.frame(k=x[[2]]$k, Sumsq=min(x[[2]]$SumSq)) 
+                     }))) %>%
       tibble::remove_rownames()
     
     latticeKernels <- lapply(latticeKernels, function(x) return(x$tarp))
     
     ## Convert to 'pseudo UD' raster (continuous surface)
-    resamp.grid <- buffer(rasterize(0, x = st_as_sf(bath), 
-                                    y = rast(xmin = refbox['xmin'], xmax = refbox['xmax'], 
-                                             ymin = refbox['ymin'], ymax = refbox['ymax'],
-                                             res = c(1, 1), 
-                                             crs = st_crs(bath)$wkt), values = 0), width=100)
-    NAflag(resamp.grid) <- FALSE
+    resamp.grid <- terra::buffer(
+      terra::rasterize(0, x = sf::st_as_sf(bath), 
+                       y = terra::rast(xmin = refbox['xmin'], xmax = refbox['xmax'], 
+                                       ymin = refbox['ymin'], ymax = refbox['ymax'],
+                                       res = c(1, 1), 
+                                       crs = sf::st_crs(bath)$wkt), values = 0), 
+      width = 100)
+    terra::NAflag(resamp.grid) <- FALSE
     
     ## Convert to spatRaster and resample for viewing quality 
-    kernRastList <- rast(lapply(1:length(latticeKernels), function(i) {
+    kernRastList <- terra::rast(lapply(1:length(latticeKernels), function(i) {
       
       x <- latticeKernels[[i]]
       xyres <- unique(c(x$EW_locs[2]-x$EW_locs[1], x$NS_locs[2]-x$NS_locs[1]))
       z <- x$NparRegMap
       
-      iKern <- mask(
-        resample(
-          cover(
-            rasterize(x = bind_cols(z = z[as.numeric(row.names(x$nodes))], x$nodes) %>%
-                        st_as_sf(., coords = c('x','y'), crs = st_crs(bath)$wkt), 
-                      y = fish.grid, 
-                      field = 'z'), 
-            classify(buffer(fish.grid, 10), rcl = cbind(c(0,1), c(NA,0)))), 
+      iKern <- terra::mask(
+        terra::resample(
+          terra::cover(
+            terra::rasterize(x = dplyr::bind_cols(z = z[as.numeric(row.names(x$nodes))], x$nodes) %>%
+                               sf::st_as_sf(., coords = c('x','y'), crs = sf::st_crs(bath)$wkt), 
+                             y = fish.grid, 
+                             field = 'z'), 
+            terra::classify(terra::buffer(fish.grid, 10), rcl = cbind(c(0,1), c(NA,0)))), 
           resamp.grid, method = 'cubicspline'), 
-        vect(bath))
+        terra::vect(bath))
       
       names(iKern) <- names(latticeKernels)[i]
       
       ## normalize values to sum to 1
-      ival <- c(values(iKern))
+      ival <- c(terra::values(iKern))
       ival[!is.na(ival)] <- ival[!is.na(ival)] / sum(ival, na.rm=T)
-      values(iKern) <- ival  
+      terra::values(iKern) <- ival  
       
       return(iKern)
       
@@ -140,22 +150,25 @@ wmLDK <- function(x = NULL, id = NULL, bath = NULL, avg = TRUE, spatres = 10, ud
     
     ## Calculate (weighted) mean Utilization DistributionD
     if(is.null(udw)) {
-      mKern <- mean(kernRastList, na.rm = TRUE)
+      mKern <- terra::mean(kernRastList, na.rm = TRUE)
     } else {
-      mKern <- weighted.mean(x = kernRasterList, w = udw$w[match(names(kernRasterList), udw[,id])], na.rm = TRUE)
+      mKern <- terra::weighted.mean(x = kernRasterList, 
+                                    w = udw$w[match(names(kernRasterList), udw[,id])], 
+                                    na.rm = TRUE)
     }
     
     ## Estimate core area isopleth and generate isolines
-    isocore <- core.area(wmKDE::rast2UD(mKern))
-    isolines <- UD2sf(UD = rast2UD(mKern, sproj = st_crs(df)$wkt), sproj = st_crs(df), 
+    isocore <- core.area(rast2UD(mKern))
+    isolines <- UD2sf(UD = rast2UD(mKern, sproj = sf::st_crs(df)$wkt), 
+                      sproj = sf::st_crs(df), 
                       probs = c(isocore, c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 1)), 
                       spType = 'line') %>%
-      mutate(coreArea = ifelse(isopleth == isocore, TRUE, FALSE), .after = plevel) %>%
-      arrange(isopleth)
+      dplyr::mutate(coreArea = ifelse(isopleth == isocore, TRUE, FALSE), .after = plevel) %>%
+      dplyr::arrange(isopleth)
     
     mKern <- c(iso = mKern, prob = mKern, vol = mKern)
-    values(mKern$iso) <- 100 - fhat2confin(values(mKern$iso))
-    values(mKern$prob) <- values(mKern$vol) / res(mKern$vol)[1] / res(mKern$vol)[2]
+    terra::values(mKern$iso) <- 100 - fhat2confin(terra::values(mKern$iso))
+    terra::values(mKern$prob) <- terra::values(mKern$vol) / terra::res(mKern$vol)[1] / terra::res(mKern$vol)[2]
     
     ## Visualize (optional)
     if(FALSE) {
