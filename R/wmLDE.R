@@ -31,13 +31,7 @@ wmLDK <- function(x = NULL, id = NULL, bath = NULL, avg = TRUE, spatres = 10, ud
   }
   
   ## Create the estimation surface
-  if(names(sort(table(st_geometry_type(bath)), decreasing=T)[1]) == 'LINESTRING') bath <- st_cast(bath, 'POLYGON')
-  bath <- bath %>% summarize %>% st_make_valid
-  bathcoord <- as.data.frame(st_coordinates(bath))
-  nodeFillingOutput <- latticeDensity::nodeFilling(poly = sf::st_cast(bath, 'POLYGON') %>% 
-                                                     st_make_valid %>% 
-                                                     summarize %>% 
-                                                     st_coordinates,
+  nodeFillingOutput <- latticeDensity::nodeFilling(poly = sf::st_coordinates(bath),
                                                    node_spacing = spatres)
   
   ## Create the node neighbourhood structure
