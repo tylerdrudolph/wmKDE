@@ -73,7 +73,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
   }
 
   ktype <- match.arg(ktype, c('iso', 'prob', 'vol'), several.ok = T)
-  if(!inherits(spatres, 'numeric')) stop('spatres must be numeric')
+  if(!is.null(spatres) & !inherits(spatres, 'numeric')) stop('spatres must be numeric')
   if(length(spatres) > 1) {
     message('length(spatres) > 1 but asymmetrical cells are not currently implemented. Only first element will be used.')
     spatres <- spatres[1]
@@ -85,7 +85,11 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
   ptime <- system.time({
 
     ## Generate the spatial grid over which the UD(s) are to be estimated
-    if(is.null(popGrid)) popGrid <- wmKDE::kernelGrid(x, exp.range = 3, cell.size = spatres)
+    if(is.null(popGrid)) {
+      popGrid <- wmKDE::kernelGrid(x, exp.range = 3, cell.size = spatres)
+    } else {
+      spatres <- res(hgrid$r)[1]
+    }
 
     ## Deploy kernel estimation
     if(avg) {
@@ -120,7 +124,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
       ## Derive the mean population UD (no weighting)
       if(!is.null(udw)) fileTag = 'weighted' else fileTag = 'unweighted'
       if(verbose) message(paste0("Deriving the ", fileTag, " mean population UD..."))
-      if(verbose & spatres != 1000) message("Resampling to ", spatres, "m...")
+      # if(verbose & spatres != 1000) message("Resampling to ", spatres, "m...")
       if(is.null(udw)) w <- rep(1, length(udList)) else w <- udw$w[match(names(udList), pull(udw, id))]
       wmKern <- wmKDE::wmUD(udList, w = w, sproj = sproj, checksum = !zscale, silent = TRUE)
 
@@ -138,7 +142,6 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     fileTag <- stringr::str_c(Sys.Date(), "_",
                    ifelse(avg, 'mean_', 'simple_'),
                    ifelse(!is.null(spw), 'weighted_kernel_', 'kernel_'),
-                   # if(!is.null(fileTag)) stringr::str_c(fileTag, '_'),
                    spatres, "m")
 
     crit.core.isopleth <- wmKDE::core.area(wmKern)
@@ -158,8 +161,10 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     wmKernRast <- wmKern
     wmKernRast$fhat <- 100 - fhat2confin(wmKern$fhat)
     wmKernRast <- wmKDE::UD2rast(wmKernRast, sproj)
-    wmKernRast[wmKernRast < 0.05] <- NA
-    if(trim) wmKernRast <- terra::trim(wmKernRast)
+    if(trim) {
+      wmKernRast[wmKernRast < 0.05] <- NA
+      wmKernRast <- terra::trim(wmKernRast)
+    }
 
     ## Prepare output objects
     outlist <- list(wmKDE = terra::rast(list(iso = wmKernRast,

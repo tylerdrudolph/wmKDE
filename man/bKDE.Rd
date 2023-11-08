@@ -8,7 +8,7 @@ bKDE(
   xy,
   id,
   wts = NULL,
-  ncores = parallel::detectCores() - 1,
+  ncores = parallelly::availableCores() - 1,
   userGrid = NULL,
   bwType = c("pi", "silv", "scott"),
   bwGlobal = TRUE,

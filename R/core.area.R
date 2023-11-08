@@ -7,7 +7,7 @@
 #' @return isopleth associated with core/intensive use area of input UD
 #' @export
 #'
-core.area <- function(UD, plot=FALSE, silent=TRUE) {
+core.area <- function(UD, plot = FALSE, silent=TRUE) {
 
   ## Generate sequence of isopleth volumes
   IVseq <- seq(0.01, 0.99, 0.01)

@@ -13,7 +13,7 @@
 #' @return list of UD objects (list of x1, x2, fhat) of length equal to length(unique(id))
 #' @export
 #'
-bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
+bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
                  userGrid = NULL, bwType = c('pi','silv','scott'), bwGlobal = TRUE, 
                  write2file = FALSE, verbose = TRUE) {
   
@@ -66,8 +66,9 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallel::detectCores() - 1,
   } else {
 
     cl <- parallelly::makeClusterPSOCK(ncores, default_packages = c('sf','dplyr','terra','ks'))
-    parallel::clusterExport(cl, varlist=c('levz','xy','id','wts','bwGlobal',
+    parallel::clusterExport(cl, varlist=c('levz','xy','id','wts','bwGlobal','ncores',
                                 'verbose','userGrid'), envir=environment())
+    parallel::clusterEvalQ(cl, terra::terraOptions(memfrac = 0.8 / ncores))
 
     kernelUDs <- parallel::parLapply(cl, 1:length(levz), function(m) {
 

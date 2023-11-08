@@ -9,7 +9,7 @@
 #' @return probability density bin values associated with user-defined isopleths
 #' @export
 #'
-calcHR <- function(est, p=c(0.5, 0.95), silent = TRUE) {
+calcHR <- function(est, p = c(0.5, 0.95), silent = TRUE) {
 
   ##  p = quantiles for estimation and display purposes
 
@@ -23,11 +23,15 @@ calcHR <- function(est, p=c(0.5, 0.95), silent = TRUE) {
   dy <- unique(y)[2] - unique(y)[1]
 
   # Estimate total volume and make sure = 1 or close to
-  totp <- sum(z, na.rm=T)*dx*dy
+  totp <- sum(z, na.rm=T) * dx * dy
 
   if(round(totp, 4) < 0.95) {
-    print("ERROR, total probability not equal to 1")
-    print(paste("totp = ", totp)) }  else z <- z / totp # to ensure integrates to 1
+    warning("ERROR, total probability not equal to 1")
+    message(paste("totp = ", totp))
+  } else { 
+    # to ensure integrates to 1
+    z <- z / totp 
+  }
 
   #  Get minimum number of squares to encompass pHR% probability
   nps <- length(p)
