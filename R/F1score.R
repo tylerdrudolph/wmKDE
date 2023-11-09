@@ -7,7 +7,7 @@
 #' @param binWidth range of values per bin on a scale of 100. Default value of 100 will result in two bins: >= threshVal & > threshVal.
 #' @param beta relative weight of recall relative to precision. Default is equal weight to both.
 #' 
-#' @return list containing 1) recall, 2) precision, and 3) F1 score for the evaluated data (predicted vs observed) and input parameters.
+#' @return either a list containing 1) recall, 2) precision, and 3) F1 score for the evaluated data (predicted vs observed) and input parameters, or a data.frame if obs is binary and !is.null(id).
 #' @export
 #' 
 
