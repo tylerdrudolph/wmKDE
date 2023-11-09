@@ -1,7 +1,7 @@
 #' F1 Score for binned continuous data (kernel utilization distributions)
 #'
 #' @param pred spatRaster object corresponding to predicted probabilities of occurrence (wmKDE()$iso) from fitted wmKDE (training set) model (0 <= x >= 100).
-#' @param obs spatRaster object corresponding to observed probabilities of occurrence (wmKDE()$iso) from fitted wmKDE (validation set) model (0 <= x >= 100). Alternatively, can be SpatialPoints corresponding to 'true' observations.
+#' @param obs spatRaster object corresponding to observed probabilities of occurrence (wmKDE()$iso) from fitted wmKDE (validation set) model (0 <= x >= 100). Alternatively, can be an sf object ('POINT' or 'MULTIPOINT') corresponding to 'true' observations.
 #' @param id for weighted measures; character vector of length one corresponding to the field in obs (if SpatialPoints) distinguishing factor levels, in which case a confusion table will be constructed for each level of the factor and weighted according to the number of points in each level.
 #' @param threshVal minimum probability value considered as a 'presence' (TRUE).
 #' @param binWidth range of values per bin on a scale of 100. Default value of 100 will result in two bins: >= threshVal & > threshVal.
