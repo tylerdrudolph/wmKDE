@@ -57,13 +57,15 @@ F1score <- function(pred, obs, id = NULL, threshVal = 70, binWidth = 100, beta =
                across(recall:FScore, ~ ifelse(is.na(.x), 0, .x)),
                id = names(v), .before = recall) %>% 
         bind_cols(n = as.vector(n)) %>%
-        mutate(w = (n / sum(n))[length(n):1])
+        mutate(w = (n / sum(n))[order(n, decreasing = T)])
       
-      return(rbind(ftab,
-                   data.frame(id = 'wtdMean', 
-                              t(apply(ftab[,c(2:4)], 2, function(x) stats::weighted.mean(x, w = ftab$w))), 
-                              n = sum(ftab$n),
-                              w = sum(ftab$w))))
+      return(bind_rows(ftab,
+                       data.frame(id = 'wtdMean',
+                                  # rbind(
+                                    # t(apply(ftab[,c(2:4)], 2, function(x) mean(x, na.rm = T))),
+                                   t(apply(ftab[,c(2:4)], 2, function(x) stats::weighted.mean(x, w = ftab$w))), 
+                                  # n = NA,
+                                  w = sum(ftab$w))))
     
       }
     
@@ -73,3 +75,4 @@ F1score <- function(pred, obs, id = NULL, threshVal = 70, binWidth = 100, beta =
   #                        positive = row.names(v)[(cuts > threshVal)[-1]])
   
 }
+
