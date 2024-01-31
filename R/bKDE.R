@@ -9,16 +9,22 @@
 #' @param bwGlobal logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions.
 #' @param verbose logical indicating whether messages should be printed
 #' @param write2file logical indicating whether results should be written to file
+#' @param sproj optional EPSG
 #'
 #' @return list of UD objects (list of x1, x2, fhat) of length equal to length(unique(id))
 #' @export
 #'
 bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
                  userGrid = NULL, bwType = c('pi','silv','scott'), bwGlobal = TRUE, 
-                 write2file = FALSE, verbose = TRUE) {
+                 sproj = NULL, write2file = TRUE, verbose = TRUE) {
   
   bwType <- match.arg(bwType, choices = c('pi','silv','scott'), several.ok = F)
-
+  bwSelect <- function(xyCoords, ...) {
+    if(bwType == 'pi') return(ks::Hpi(xyCoords))
+    if(bwType == 'silv') return(kernelboot::bw.silv(xyCoords)) else return(kernelboot::bw.scott(xyCoords))
+  }
+  
+  # if(write2file) flist <- c()
   if(nrow(xy) != length(id)) stop("id must be of length equal to nrow(xy)")
   if(is.null(wts)) {
     wts <- rep(1, nrow(xy))
@@ -26,9 +32,6 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
     if(length(wts) != nrow(xy) | !inherits(wts, 'numeric')) stop('wts must be a vector of numeric weights of length equal to nrow(xy)')
   }
   if(is.null(userGrid)) stop("userGrid must be provided")
-
-  kernelUDs = list()
-  levz <- unique(id)
 
   if(verbose) {
     if(!is.null(wts)) {
@@ -39,64 +42,74 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
   }
   
   if(ncores == 1) {
-
-    for(m in 1:length(levz)) {
-
-      if(verbose) cat(paste(m, "/", length(levz), sep=" "), "\n")
-      tempxy <- xy[id %in% levz[m], ]
-
+    
+    kernelUDs <- setNames(terra::rast(sapply(1:length(unique(id)), function(m) {
+      
+      if(verbose) cat(paste(m, "/", length(unique(id)), sep=" "), "\n")
+      tempxy <- xy[id %in% unique(id)[m], ]
+      
       ## kernel density estimation using with or without spatial weights (scaled to sum to 1)
-      wt <- wts[id %in% levz[m]]
+      wt <- wts[id %in% unique(id)[m]]
       wt <- length(wt) * wt / sum(wt)
-      bwSelect <- function(xyCoords, ...) {
-        if(bwType == 'pi') return(ks::Hpi(xyCoords))
-        if(bwType == 'silv') return(kernelboot::bw.silv(xyCoords)) else return(kernelboot::bw.scott(xyCoords))
-      }
       if(bwGlobal) H <- bwSelect(xy) else H <- bwSelect(tempxy)
-      kmat <- kde(tempxy, w=wt, H=H,
-                      xmin = c(userGrid$range.x[[1]][1], userGrid$range.x[[2]][1]),
-                      xmax = c(userGrid$range.x[[1]][2], userGrid$range.x[[2]][2]),
-                      gridsize = userGrid$grid.size,
-                  density = TRUE)
-
-      kernelUDs = c(kernelUDs, list(list(x1 = kmat$eval.points[[1]], x2 = kmat$eval.points[[2]], fhat = kmat$estimate)))
-
-    }
-
-  } else {
-
-    cl <- parallelly::makeClusterPSOCK(ncores, default_packages = c('sf','dplyr','terra','ks'))
-    parallel::clusterExport(cl, varlist=c('levz','xy','id','wts','bwGlobal','ncores',
-                                'verbose','userGrid'), envir=environment())
-    parallel::clusterEvalQ(cl, terra::terraOptions(memfrac = 0.8 / ncores))
-
-    kernelUDs <- parallel::parLapply(cl, 1:length(levz), function(m) {
-
-      tempxy <- xy[id %in% levz[m], ]
-
-      ## Kernel density estimation
-      wt <- wts[id %in% levz[m]]
-      wt <- length(wt) * wt / sum(wt)
-      if(bwGlobal) H <- ks::Hpi(xy) else H <- ks::Hpi(tempxy)
-      kmat <- ks::kde(tempxy, w=wt, H=H,
+      kmat <- kde(tempxy, w = wt, H = H,
                   xmin = c(userGrid$range.x[[1]][1], userGrid$range.x[[2]][1]),
                   xmax = c(userGrid$range.x[[1]][2], userGrid$range.x[[2]][2]),
                   gridsize = userGrid$grid.size,
-                  density = T)
+                  density = TRUE)
+      
+      tf <- paste0(tempdir(), '\\kernel_', unique(id)[m], '.tif')
+      terra::writeRaster(UD2rast(list(x1 = kmat$eval.points[[1]], 
+                                      x2 = kmat$eval.points[[2]], 
+                                      fhat = kmat$estimate), sproj = sproj), 
+                         filename = tf, overwrite = T)
+      return(tf)
+      
+    })), unique(id))
 
-      return(list(x1=kmat$eval.points[[1]], x2=kmat$eval.points[[2]], fhat=kmat$estimate))
+  } else {
+    
+    cl <- parallelly::makeClusterPSOCK(ncores, default_packages = c('sf','dplyr','terra','ks','wmKDE'))
+    parallel::clusterExport(cl, varlist = c('xy','id','wts','bwGlobal','ncores','sproj',
+                                'verbose','userGrid','write2file'), envir=environment())
+    parallel::clusterEvalQ(cl, terra::terraOptions(memfrac = 0.8 / ncores))
 
-    })
+    kernelUDs <- setNames(terra::rast(
+      parallel::parSapply(cl, 1:length(unique(id)), function(m) {
+      
+      tempxy <- xy[id %in% unique(id)[m], ]
+      
+      ## Kernel density estimation
+      wt <- wts[id %in% unique(id)[m]]
+      wt <- length(wt) * wt / sum(wt)
+      if(bwGlobal) H <- ks::Hpi(xy) else H <- ks::Hpi(tempxy)
+      
+      kmat <- ks::kde(tempxy, w = wt, H = H,
+                      xmin = c(userGrid$range.x[[1]][1], userGrid$range.x[[2]][1]),
+                      xmax = c(userGrid$range.x[[1]][2], userGrid$range.x[[2]][2]),
+                      gridsize = userGrid$grid.size,
+                      density = T)
+      
+      tf <- paste0(tempdir(), '/kernel_', unique(id)[m], '.tif')
 
+      terra::writeRaster(
+        x = wmKDE::UD2rast(
+          list(x1 = kmat$eval.points[[1]],
+               x2 = kmat$eval.points[[2]],
+               fhat = kmat$estimate)
+          , sproj = sproj),
+        filename = tf, overwrite = T)
+        
+      return(tf)
+      
+    })), unique(id))
+    
     parallel::stopCluster(cl)
-
+    
   }
 
   if(verbose) message("Analysis complete !")
 
-  names(kernelUDs) = levz
-
   return(kernelUDs)
 
 }
-
