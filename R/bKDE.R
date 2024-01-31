@@ -24,7 +24,6 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
     if(bwType == 'silv') return(kernelboot::bw.silv(xyCoords)) else return(kernelboot::bw.scott(xyCoords))
   }
   
-  # if(write2file) flist <- c()
   if(nrow(xy) != length(id)) stop("id must be of length equal to nrow(xy)")
   if(is.null(wts)) {
     wts <- rep(1, nrow(xy))
