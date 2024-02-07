@@ -10,9 +10,10 @@ bKDE(
   wts = NULL,
   ncores = parallelly::availableCores() - 1,
   userGrid = NULL,
-  bwType = c("pi", "silv", "scott"),
+  bwType = c("pi", "silv", "scott", "user"),
   bwGlobal = TRUE,
-  write2file = FALSE,
+  sproj = NULL,
+  write2file = TRUE,
   verbose = TRUE
 )
 }
@@ -30,6 +31,8 @@ bKDE(
 \item{bwType}{specify bandwidth selection method. current options include plug-in ('pi' = ks::Hpi(); default argument), 'silv' (calls kernelboot::bw.silv()) and 'scott' (calls kernelboot::bw.scott()).}
 
 \item{bwGlobal}{logical indicating whether bandwidth smoothing should be derived from all relocations (recommended) or made to vary according to individual sample (point pattern) distributions.}
+
+\item{sproj}{optional EPSG}
 
 \item{write2file}{logical indicating whether results should be written to file}
 

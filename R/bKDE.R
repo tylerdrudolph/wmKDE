@@ -10,6 +10,8 @@
 #' @param verbose logical indicating whether messages should be printed
 #' @param write2file logical indicating whether results should be written to file
 #' @param sproj optional EPSG
+#' 
+#' @importFrom stats setNames
 #'
 #' @return list of UD objects (list of x1, x2, fhat) of length equal to length(unique(id))
 #' @export
@@ -20,10 +22,10 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
   
   bwType <- match.arg(bwType, choices = c('pi','silv','scott','user'), several.ok = F)
   bwSelect <- function(xyCoords, ...) {
-    if(bwType == 'user') {
-      stop('not yet implemented')
-      # return(bw)
-    }
+    # if(bwType == 'user') {
+    #   stop('not yet implemented')
+    #   # return(bw)
+    # }
     if(bwType == 'pi') return(ks::Hpi(xyCoords))
     if(bwType == 'silv') return(kernelboot::bw.silv(xyCoords)) else return(kernelboot::bw.scott(xyCoords))
   }
@@ -79,6 +81,7 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
     parallel::clusterEvalQ(cl, terra::terraOptions(memfrac = 0.8 / ncores))
 
     kernelUDs <- setNames(terra::rast(
+      
       parallel::parSapply(cl, 1:length(unique(id)), function(m) {
       
       tempxy <- xy[id %in% unique(id)[m], ]

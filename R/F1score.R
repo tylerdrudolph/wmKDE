@@ -7,11 +7,17 @@
 #' @param binWidth range of values per bin on a scale of 100. Default value of 100 will result in two bins: >= threshVal & > threshVal.
 #' @param beta relative weight of recall relative to precision. Default is equal weight to both.
 #' 
+#' @importFrom stats setNames
+#' @importFrom caret recall
+#' @importFrom caret precision
+#' @importFrom caret F_meas
+#' 
 #' @return either a list containing 1) recall, 2) precision, and 3) F1 score for the evaluated data (predicted vs observed) and input parameters, or a data.frame if obs is binary and !is.null(id).
 #' @export
 #' 
-
 F1score <- function(pred, obs, id = NULL, threshVal = 70, binWidth = 100, beta = 1) {
+  
+  FScore <- idName <- NULL
   
   cuts <- sort(c(seq(0, 100, binWidth), threshVal))
   cuts <- cuts[!duplicated(cuts)]
@@ -35,8 +41,8 @@ F1score <- function(pred, obs, id = NULL, threshVal = 70, binWidth = 100, beta =
       return(Fcalc(terra::crosstab(c(terra::classify(stats::setNames(pred, 'pred'),
                                                      rcl = cuts), 
                                      terra::classify(stats::setNames(
-                                       rasterize(x = obs, y = pred, 
-                                                 fun = function(x) 100, background = 0.1), 'true'), rcl = cuts)))))
+                                       terra::rasterize(x = obs, y = pred, 
+                                                        fun = function(x) 100, background = 0.1), 'true'), rcl = cuts)))))
       
     } else {
       
@@ -45,32 +51,32 @@ F1score <- function(pred, obs, id = NULL, threshVal = 70, binWidth = 100, beta =
       
       v <- setNames(lapply(Uid, function(i) {
         terra::crosstab(c(terra::classify(stats::setNames(pred, 'pred'),
-                                                rcl = cuts), 
-                                terra::classify(stats::setNames(
-                                  rasterize(x = dplyr::filter(obs, idName == i), y = pred, 
-                                            fun = function(x) 100, background = 0.1), i), rcl = cuts)))
+                                          rcl = cuts), 
+                          terra::classify(stats::setNames(
+                            terra::rasterize(x = dplyr::filter(obs, idName == i), y = pred, 
+                                             fun = function(x) 100, background = 0.1), i), rcl = cuts)))
       }), Uid)
       
       ftab <- do.call(rbind, lapply(v, function(k) t(Fcalc(k)))) %>%
         as.data.frame %>%
-        mutate(across(recall:FScore, ~ unlist(.x)),
-               across(recall:FScore, ~ ifelse(is.na(.x), 0, .x)),
-               id = names(v), .before = recall) %>% 
-        bind_cols(n = as.vector(n)) %>%
-        mutate(w = (n / sum(n))[order(n, decreasing = T)])
+        dplyr::mutate(dplyr::across(recall:FScore, ~ unlist(.x)),
+                      dplyr::across(recall:FScore, ~ ifelse(is.na(.x), 0, .x)),
+                      id = names(v), .before = recall) %>% 
+        dplyr::bind_cols(n = as.vector(n)) %>%
+        dplyr::mutate(w = (n / sum(n))[order(n, decreasing = T)])
       
-      return(bind_rows(ftab,
-                       data.frame(id = 'wtdMean',
-                                  # rbind(
-                                    # t(apply(ftab[,c(2:4)], 2, function(x) mean(x, na.rm = T))),
-                                   t(apply(ftab[,c(2:4)], 2, function(x) stats::weighted.mean(x, w = ftab$w))), 
-                                  # n = NA,
-                                  w = sum(ftab$w))))
-    
-      }
+      return(dplyr::bind_rows(ftab,
+                              data.frame(id = 'wtdMean',
+                                         # rbind(
+                                         # t(apply(ftab[,c(2:4)], 2, function(x) mean(x, na.rm = T))),
+                                         t(apply(ftab[,c(2:4)], 2, function(x) stats::weighted.mean(x, w = ftab$w))), 
+                                         # n = NA,
+                                         w = sum(ftab$w))))
+      
+    }
     
   }
-
+  
   # caret::confusionMatrix(v, mode = 'everything',
   #                        positive = row.names(v)[(cuts > threshVal)[-1]])
   

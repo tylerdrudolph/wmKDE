@@ -1,23 +1,22 @@
-#' Title
+#' Redistribute UD probability densities proportionally so as to ensure that the sum of cell volumes equals one.
 #'
-#' @param r 
-#' @param out 
+#' @param r spatRaster containing kernel density probabilities (utilization distribution)
+#' @param out integer parameter specifying whether output cell values are aspatial (out=1) or volume-based (out=2).
 #'
-#' @return
+#' @return spatRaster with probabilities adjusted such that corresponding volumes sum to exactly 1
 #' @export
 #'
-#' @examples
 finetune <- function(r, out = 1) {
   
   cell.area <- prod(res(r))
   v <- r * cell.area
-  tot <- unlist(global(v, 'sum'))
+  tot <- unlist(terra::global(v, 'sum'))
   
   if(tot < 1) {
     if(1 - tot > .005) warning("Sum of cell values not equal to 1 (", tot, "); pls verify")
     rem <- 1 - tot
     weights <- v / tot
-    # unlist(global(weights * rem,'sum')) == rem
+    # unlist(terra::global(weights * rem,'sum')) == rem
     v <- v + (weights * rem)
   }
   
@@ -25,7 +24,7 @@ finetune <- function(r, out = 1) {
     if(tot - 1 > .005) warning("Sum of cell values not equal to 1 (", round(tot, 5), "); pls verify")
     rem <- tot - 1
     weights <- v / tot
-    # unlist(global(weights * rem,'sum')) == rem
+    # unlist(terra::global(weights * rem,'sum')) == rem
     v <- v - (weights * rem)
   }
   

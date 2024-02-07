@@ -4,10 +4,10 @@
 \alias{calcHR}
 \title{calcHR}
 \usage{
-calcHR(est, p = c(0.5, 0.95), silent = TRUE)
+calcHR(r, p = c(0.5, 0.95), silent = TRUE)
 }
 \arguments{
-\item{est}{UD object, list containing 3 elements: x (x1) and y (x2) coordinates and corresponding density estimates (fhat)}
+\item{r}{spatRast (utilization distribution)}
 
 \item{p}{vector of probabilities at which to derive home range size}
 

@@ -29,14 +29,14 @@
 #' @export
 #'
 wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NULL,
-                  bwType = c('pi', 'silv', 'scott'),
+                  bwType = c('pi', 'silv', 'scott','user'),
                   bwGlobal = TRUE, zscale = TRUE, spatres = 1000, ktype = 'iso',
                   ncores = ifelse(avg, parallel::detectCores() - 1, 1),
                   trim = TRUE, write2file = FALSE, ow = TRUE, 
                   writeDir = getwd(), fileTag = NULL,
                   retObj = TRUE, verbose = TRUE) {
 
-  X <- Y <- w <- layer <- isopleth <- geometry <- plevel <- NULL
+  X <- Y <- w <- layer <- isopleth <- geometry <- plevel <- hgrid <- NULL
 
   ## Convert from spatial where applicable
   if(inherits(x, 'Spatial')) x <- sf::st_as_sf(x)
@@ -114,7 +114,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
       ## Rescale z values
       if(zscale) {
         if(verbose) message("Rescaling density values...")
-        udList <- sapp(udList, function(x) {
+        udList <- terra::sapp(udList, function(x) {
           x <- x * spatres ^ 2
           mm <- as.vector(terra::minmax(x))
           (x - mm[1]) / (mm[2] - mm[1])
@@ -128,7 +128,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
       if(!zscale) udList <- terra::sapp(udList, wmKDE::finetune)
       wmKern <- terra::weighted.mean(udList, w = w)
 
-      if(zscale) wmKern <- wmKern / unlist(global(wmKern, 'sum', na.rm = T)) / spatres / spatres
+      if(zscale) wmKern <- wmKern / unlist(terra::global(wmKern, 'sum', na.rm = T)) / spatres / spatres
 
     } else {
 

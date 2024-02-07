@@ -5,7 +5,7 @@
 #' @return spatRaster correponding to kernel probability isopleths
 #' @export
 #'
-fhat2confin <- function(r) {
+fhat2confin <- function(r, ...) {
   
   z <- t(terra::as.matrix(r, wide = TRUE)[nrow(r):1, ])
   
@@ -21,7 +21,7 @@ fhat2confin <- function(r) {
                    y = terra::yFromRow(r, nrow(r):1))
   x$z = 100 - as.vector(matrix(vreord, ncol = dimxy[2])) 
        
-  return(rast(x, crs = sproj$wkt))
+  return(rast(x, crs = terra::crs(r)))
 }
 
 # fhat2confin <- function(z) {

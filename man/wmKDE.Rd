@@ -11,7 +11,7 @@ wmKDE(
   spw = NULL,
   udw = NULL,
   popGrid = NULL,
-  bwType = c("pi", "silv", "scott"),
+  bwType = c("pi", "silv", "scott", "user"),
   bwGlobal = TRUE,
   zscale = TRUE,
   spatres = 1000,
