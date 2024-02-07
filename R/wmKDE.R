@@ -79,7 +79,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     spatres <- spatres[1]
   }
   
-  bwType <- match.arg(bwType, choices = c('pi','silv','scott'), several.ok = F)
+  bwType <- match.arg(bwType, choices = c('pi','silv','scott','user'), several.ok = F)
 
   ## Log system processing time
   ptime <- system.time({
@@ -105,36 +105,38 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     }
 
     ## Deploy multiple UD estimations
-    udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid, bwType = bwType,
-                          sproj = sproj, bwGlobal = bwGlobal, ncores = ifelse(avg, ncores, 1), verbose = FALSE)
+    udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid, 
+                          bwType = bwType, sproj = sproj, bwGlobal = bwGlobal, 
+                          ncores = ifelse(avg, ncores, 1), verbose = FALSE)
     
-    if(avg & length(udList) > 1) {
+    if(avg & terra::nlyr(udList) > 1) {
 
       ## Rescale z values
       if(zscale) {
-
         if(verbose) message("Rescaling density values...")
-        udList <- lapply(udList, function(x) {
-          x$fhat <- wmKDE::range01(x$fhat * spatres * spatres)
-          return(x)
+        udList <- sapp(udList, function(x) {
+          x <- x * spatres ^ 2
+          mm <- as.vector(terra::minmax(x))
+          (x - mm[1]) / (mm[2] - mm[1])
         })
-
       }
 
       ## Derive the mean population UD (no weighting)
       if(!is.null(udw)) fileTag = 'weighted' else fileTag = 'unweighted'
       if(verbose) message(paste0("Deriving the ", fileTag, " mean population UD..."))
-      # if(verbose & spatres != 1000) message("Resampling to ", spatres, "m...")
       if(is.null(udw)) w <- rep(1, length(udList)) else w <- udw$w[match(names(udList), pull(udw, id))]
-      wmKern <- wmKDE::wmUD(udList, w = w, sproj = sproj, checksum = !zscale, silent = TRUE)
+      if(!zscale) udList <- terra::sapp(udList, wmKDE::finetune)
+      wmKern <- terra::weighted.mean(udList, w = w)
 
-      if(zscale) wmKern$fhat <- wmKern$fhat / sum(wmKern$fhat) / spatres / spatres
+      if(zscale) wmKern <- wmKern / unlist(global(wmKern, 'sum', na.rm = T)) / spatres / spatres
 
     } else {
 
       wmKern <- udList[[1]]
 
     }
+    
+    wmKern <- wmKDE::finetune(wmKern)
 
     ###########################################
     ## Calculate the core area isopleth
@@ -144,23 +146,25 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
                    ifelse(!is.null(spw), 'weighted_kernel_', 'kernel_'),
                    spatres, "m")
 
-    crit.core.isopleth <- wmKDE::core.area(wmKern)
+    crit.core.isopleth <- wmKDE::core.area(rast2UD(wmKern))
 
     ############################################
     ## Extract isopleth polygons, including core/intensive use area
-    isopoly <- wmKDE::UD2sf(UD = wmKern, sproj = sproj,
+    isopoly <- wmKDE::UD2sf(UD = rast2UD(wmKern, sproj = sproj), sproj = sproj,
                             prob = sort(c(crit.core.isopleth, c(0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1))))
     
     ## Determine the % of points falling within individual isopleth boundaries, including core area
-    ftab <- terra::extract(wmKDE::UD2rast(wmKern, sproj), xy)
+    ftab <- terra::extract(wmKern, xy, fun = 'sum')
     names(ftab)[2] <- 'plevel'
-    isopoly <- mutate(isopoly, pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
+    isopoly <- mutate(isopoly, 
+                      pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
                       coreArea = ifelse(isopleth == crit.core.isopleth, TRUE, FALSE), .before = geometry) %>%
       sf::st_cast('MULTIPOLYGON')
 
-    wmKernRast <- wmKern
-    wmKernRast$fhat <- 100 - fhat2confin(wmKern$fhat)
+    wmKernRast <- wmKDE::rast2UD(wmKern, sproj = sproj)
+    wmKernRast$fhat <- 100 - wmKDE::fhat2confin(wmKDE::rast2UD(wmKern, sproj = sproj)$fhat)
     wmKernRast <- wmKDE::UD2rast(wmKernRast, sproj)
+    
     if(trim) {
       wmKernRast[wmKernRast < 0.05] <- NA
       wmKernRast <- terra::trim(wmKernRast)
@@ -168,8 +172,8 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
 
     ## Prepare output objects
     outlist <- list(wmKDE = terra::rast(list(iso = wmKernRast,
-                                             prob = terra::crop(wmKDE::UD2rast(wmKern, sproj), wmKernRast),
-                                             vol = terra::crop(wmKDE::UD2rast(wmKern, sproj) * spatres * spatres, wmKernRast)))[[ktype]],
+                                             prob = terra::crop(wmKern, wmKernRast),
+                                             vol = terra::crop(wmKern * spatres * spatres, wmKernRast)))[[ktype]],
                     isocontours = isopoly)
 
     if(write2file) {

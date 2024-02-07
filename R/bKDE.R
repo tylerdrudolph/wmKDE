@@ -15,11 +15,15 @@
 #' @export
 #'
 bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
-                 userGrid = NULL, bwType = c('pi','silv','scott'), bwGlobal = TRUE, 
-                 sproj = NULL, write2file = TRUE, verbose = TRUE) {
+                 userGrid = NULL, bwType = c('pi','silv','scott','user'), 
+                 bwGlobal = TRUE, sproj = NULL, write2file = TRUE, verbose = TRUE) {
   
-  bwType <- match.arg(bwType, choices = c('pi','silv','scott'), several.ok = F)
+  bwType <- match.arg(bwType, choices = c('pi','silv','scott','user'), several.ok = F)
   bwSelect <- function(xyCoords, ...) {
+    if(bwType == 'user') {
+      stop('not yet implemented')
+      # return(bw)
+    }
     if(bwType == 'pi') return(ks::Hpi(xyCoords))
     if(bwType == 'silv') return(kernelboot::bw.silv(xyCoords)) else return(kernelboot::bw.scott(xyCoords))
   }
@@ -42,7 +46,8 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
   
   if(ncores == 1) {
     
-    kernelUDs <- setNames(terra::rast(sapply(1:length(unique(id)), function(m) {
+    kernelUDs <- setNames(terra::rast(
+      sapply(1:length(unique(id)), function(m) {
       
       if(verbose) cat(paste(m, "/", length(unique(id)), sep=" "), "\n")
       tempxy <- xy[id %in% unique(id)[m], ]
@@ -57,7 +62,7 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
                   gridsize = userGrid$grid.size,
                   density = TRUE)
       
-      tf <- paste0(tempdir(), '\\kernel_', unique(id)[m], '.tif')
+      tf <- paste0(getwd(), '\\tmp\\kernel_', unique(id)[m], '.tif')
       terra::writeRaster(UD2rast(list(x1 = kmat$eval.points[[1]], 
                                       x2 = kmat$eval.points[[2]], 
                                       fhat = kmat$estimate), sproj = sproj), 
@@ -89,7 +94,7 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
                       gridsize = userGrid$grid.size,
                       density = T)
       
-      tf <- paste0(tempdir(), '/kernel_', unique(id)[m], '.tif')
+      tf <- paste0(getwd(), '\\tmp\\kernel_', unique(id)[m], '.tif')
 
       terra::writeRaster(
         x = wmKDE::UD2rast(
