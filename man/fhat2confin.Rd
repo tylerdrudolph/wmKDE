@@ -4,7 +4,7 @@
 \alias{fhat2confin}
 \title{Convert UD density estimates into relative probabilities}
 \usage{
-fhat2confin(r)
+fhat2confin(r, ...)
 }
 \arguments{
 \item{r}{spatRaster corresponding to UD kernel density values}

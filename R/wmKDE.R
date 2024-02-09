@@ -24,6 +24,8 @@
 #' @param writeDir optional path to desired write folder location. Default is working directory.
 #' @param retObj logical; should result be returned into R environment?
 #' @param verbose logical; should status messages be printed?
+#' 
+#' @import parallelly
 #'
 #' @return list containing spatRaster object(s) of length equal to length(ktype) and one sf multipolygons object corresponding to isopleth and core area contours
 #' @export
@@ -31,12 +33,12 @@
 wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NULL,
                   bwType = c('pi', 'silv', 'scott','user'),
                   bwGlobal = TRUE, zscale = TRUE, spatres = 1000, ktype = 'iso',
-                  ncores = ifelse(avg, parallel::detectCores() - 1, 1),
+                  ncores = ifelse(avg, parallelly::availableCores() - 2, 1),
                   trim = TRUE, write2file = FALSE, ow = TRUE, 
                   writeDir = getwd(), fileTag = NULL,
                   retObj = TRUE, verbose = TRUE) {
 
-  X <- Y <- w <- layer <- isopleth <- geometry <- plevel <- hgrid <- NULL
+  X <- Y <- w <- layer <- isopleth <- geometry <- plevel <- NULL
 
   ## Convert from spatial where applicable
   if(inherits(x, 'Spatial')) x <- sf::st_as_sf(x)
@@ -88,7 +90,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     if(is.null(popGrid)) {
       popGrid <- wmKDE::kernelGrid(x, exp.range = 3, cell.size = spatres)
     } else {
-      spatres <- res(hgrid$r)[1]
+      spatres <- res(popGrid$r)[1]
     }
 
     ## Deploy kernel estimation
@@ -103,11 +105,15 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
       if(verbose) message("Estimating a simple Utilization Distribution (UD)...")
 
     }
-
+    
+    browser()
+    
     ## Deploy multiple UD estimations
     udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid, 
                           bwType = bwType, sproj = sproj, bwGlobal = bwGlobal, 
                           ncores = ifelse(avg, ncores, 1), verbose = FALSE)
+    
+    # browser()
     
     if(avg & terra::nlyr(udList) > 1) {
 
@@ -146,11 +152,11 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
                    ifelse(!is.null(spw), 'weighted_kernel_', 'kernel_'),
                    spatres, "m")
 
-    crit.core.isopleth <- wmKDE::core.area(rast2UD(wmKern))
+    crit.core.isopleth <- wmKDE::core.area(wmKern)
 
     ############################################
     ## Extract isopleth polygons, including core/intensive use area
-    isopoly <- wmKDE::UD2sf(UD = rast2UD(wmKern, sproj = sproj), sproj = sproj,
+    isopoly <- wmKDE::isopolygonize(r = wmKern, sproj = sproj,
                             prob = sort(c(crit.core.isopleth, c(0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1))))
     
     ## Determine the % of points falling within individual isopleth boundaries, including core area
@@ -161,9 +167,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
                       coreArea = ifelse(isopleth == crit.core.isopleth, TRUE, FALSE), .before = geometry) %>%
       sf::st_cast('MULTIPOLYGON')
 
-    wmKernRast <- wmKDE::rast2UD(wmKern, sproj = sproj)
-    wmKernRast$fhat <- 100 - wmKDE::fhat2confin(wmKDE::rast2UD(wmKern, sproj = sproj)$fhat)
-    wmKernRast <- wmKDE::UD2rast(wmKernRast, sproj)
+    wmKernRast <- wmKDE::fhat2confin(wmKern)
     
     if(trim) {
       wmKernRast[wmKernRast < 0.05] <- NA

@@ -16,7 +16,7 @@
 #' @return list of UD objects (list of x1, x2, fhat) of length equal to length(unique(id))
 #' @export
 #'
-bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
+bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 2,
                  userGrid = NULL, bwType = c('pi','silv','scott','user'), 
                  bwGlobal = TRUE, sproj = NULL, write2file = TRUE, verbose = TRUE) {
   
@@ -78,11 +78,12 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
     cl <- parallelly::makeClusterPSOCK(ncores, default_packages = c('sf','dplyr','terra','ks','wmKDE'))
     parallel::clusterExport(cl, varlist = c('xy','id','wts','bwGlobal','ncores','sproj',
                                 'verbose','userGrid','write2file'), envir=environment())
-    parallel::clusterEvalQ(cl, terra::terraOptions(memfrac = 0.8 / ncores))
+    parallel::clusterEvalQ(cl, terra::terraOptions(memfrac = 0.5 / ncores,
+                                                   memmax = 0.5))
 
     kernelUDs <- setNames(terra::rast(
       
-      parallel::parSapply(cl, 1:length(unique(id)), function(m) {
+      parallel::parSapplyLB(cl, 1:length(unique(id)), function(m) {
       
       tempxy <- xy[id %in% unique(id)[m], ]
       
@@ -103,15 +104,20 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 1,
         x = wmKDE::UD2rast(
           list(x1 = kmat$eval.points[[1]],
                x2 = kmat$eval.points[[2]],
-               fhat = kmat$estimate)
-          , sproj = sproj),
+               fhat = kmat$estimate), 
+          sproj = sproj),
         filename = tf, overwrite = T)
         
+      rm(kmat)
+      gc()
+      
       return(tf)
       
     })), unique(id))
     
     parallel::stopCluster(cl)
+    # rm(list=ls())
+    # gc()
     
   }
 
