@@ -65,7 +65,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     wtvec <- pull(x, spw)
     if(!inherits(wtvec, 'numeric'))  stop('spw not numeric')
   } else {
-    wtvec <- rep(1, nrow(x))
+    wtvec <- NULL
   }
 
   if(avg & !is.null(udw)) {
@@ -105,53 +105,56 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
       if(verbose) message("Estimating a simple Utilization Distribution (UD)...")
 
     }
-    
-    browser()
-    
-    ## Deploy multiple UD estimations
-    udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid, 
-                          bwType = bwType, sproj = sproj, bwGlobal = bwGlobal, 
-                          ncores = ifelse(avg, ncores, 1), verbose = FALSE)
-    
-    # browser()
-    
-    if(avg & terra::nlyr(udList) > 1) {
 
-      ## Rescale z values
-      if(zscale) {
-        if(verbose) message("Rescaling density values...")
-        udList <- terra::sapp(udList, function(x) {
-          x <- x * spatres ^ 2
-          mm <- as.vector(terra::minmax(x))
-          (x - mm[1]) / (mm[2] - mm[1])
+    ## Deploy multiple UD estimations
+    fUD <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid, 
+                       bwType = bwType, sproj = sproj, bwGlobal = bwGlobal, 
+                       ncores = ifelse(avg, ncores, 1), 
+                       rscale = zscale, verbose = FALSE)
+
+    if(avg & length(fUD) > 1) {
+
+      ## Fine-tune to ensure kernel probability values sum to 1 (when zscale == FALSE)
+      if(!zscale) {
+        lapply(1:length(fUD), function(i) {
+          writeRaster(finetune(rast(fUD[i])),
+                      filename = fUD[i],
+                      overwrite = T)
         })
       }
 
+      ## Assign UD weights, if provided
+      if(!is.null(udw)) ft = 'weighted' else ft = 'unweighted'
+      if(verbose) message(paste0("Deriving the ", ft, " mean population UD..."))
+      if(is.null(udw)) w <- rep(1, length(fUD)) else w <- udw$w[match(names(fUD), pull(udw, id))]
+      
       ## Derive the mean population UD (no weighting)
-      if(!is.null(udw)) fileTag = 'weighted' else fileTag = 'unweighted'
-      if(verbose) message(paste0("Deriving the ", fileTag, " mean population UD..."))
-      if(is.null(udw)) w <- rep(1, length(udList)) else w <- udw$w[match(names(udList), pull(udw, id))]
-      if(!zscale) udList <- terra::sapp(udList, wmKDE::finetune)
-      wmKern <- terra::weighted.mean(udList, w = w)
+      wmKern <- terra::weighted.mean(rast(fUD), w = w)
 
+      ## Convert rescaled UD values back to kernel density probabilities (if zscale == TRUE)
       if(zscale) wmKern <- wmKern / unlist(terra::global(wmKern, 'sum', na.rm = T)) / spatres / spatres
 
+      # delete temporary files
+      unlink(fUD)
+      
     } else {
 
-      wmKern <- udList[[1]]
+      wmKern <- rast(fUD)
 
-    }
+    } 
     
+    ## Fine-tune so all probabilities sum to 1
     wmKern <- wmKDE::finetune(wmKern)
 
     ###########################################
     ## Calculate the core area isopleth
     if(verbose) message("Calculating the core area isopleth...")
-    fileTag <- stringr::str_c(Sys.Date(), "_",
-                   ifelse(avg, 'mean_', 'simple_'),
-                   ifelse(!is.null(spw), 'weighted_kernel_', 'kernel_'),
-                   spatres, "m")
+    ftag <- stringr::str_c(Sys.Date(), "_",
+                           ifelse(avg, 'mean_', 'simple_'),
+                           ifelse(!is.null(spw), 'weighted_kernel_', 'kernel_'),
+                           spatres, "m")
 
+    if(!is.null(fileTag)) fileTag <- paste0(ftag, '_', fileTag) else fileTag <- ftag
     crit.core.isopleth <- wmKDE::core.area(wmKern)
 
     ############################################
@@ -191,7 +194,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
       cat(paste0("System date/time: ", Sys.time()), '\n', '\n')
       cat('MODEL PARAMETERS:', '\n', '\n')
       cat('METHODOLOGY:', '\n')
-      cat('Type of analysis:', ifelse(!is.null(spw) | !is.null(udw), 'weighted', ''), ifelse(avg, 'mean', 'Simple'), 'kernel', '\n')
+      cat('Type of analysis:', ifelse(!is.null(spw) | !is.null(udw), 'weighted', ''), ifelse(avg, 'mean', 'simple'), 'kernel', '\n')
       cat('Spatial weights:', !is.null(spw), '\n')
       cat('UD weights:', !is.null(udw), '\n')
       cat("Number of parallel processes (threads):", ncores, "\n")

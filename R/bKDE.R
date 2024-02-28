@@ -10,6 +10,7 @@
 #' @param verbose logical indicating whether messages should be printed
 #' @param write2file logical indicating whether results should be written to file
 #' @param sproj optional EPSG
+#' @param rscale logical indicating whether results should be rescaled between 0 and 1
 #' 
 #' @importFrom stats setNames
 #'
@@ -18,7 +19,8 @@
 #'
 bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 2,
                  userGrid = NULL, bwType = c('pi','silv','scott','user'), 
-                 bwGlobal = TRUE, sproj = NULL, write2file = TRUE, verbose = TRUE) {
+                 bwGlobal = TRUE, sproj = NULL, write2file = TRUE, rscale = FALSE, 
+                 verbose = TRUE) {
   
   bwType <- match.arg(bwType, choices = c('pi','silv','scott','user'), several.ok = F)
   bwSelect <- function(xyCoords, ...) {
@@ -48,8 +50,7 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 2,
   
   if(ncores == 1) {
     
-    kernelUDs <- setNames(terra::rast(
-      sapply(1:length(unique(id)), function(m) {
+    kernelUDs <- sapply(1:length(unique(id)), function(m) {
       
       if(verbose) cat(paste(m, "/", length(unique(id)), sep=" "), "\n")
       tempxy <- xy[id %in% unique(id)[m], ]
@@ -64,14 +65,16 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 2,
                   gridsize = userGrid$grid.size,
                   density = TRUE)
       
-      tf <- paste0(getwd(), '\\tmp\\kernel_', unique(id)[m], '.tif')
+      if(rscale) kmat$estimate <- kmat$estimate / sum(kmat$estimate)
+      
+      tf <- paste0(getwd(), '/tmp/kernel_', unique(id)[m], '.tif')
       terra::writeRaster(UD2rast(list(x1 = kmat$eval.points[[1]], 
                                       x2 = kmat$eval.points[[2]], 
                                       fhat = kmat$estimate), sproj = sproj), 
                          filename = tf, overwrite = T)
       return(tf)
       
-    })), unique(id))
+    })
 
   } else {
     
@@ -81,9 +84,7 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 2,
     parallel::clusterEvalQ(cl, terra::terraOptions(memfrac = 0.5 / ncores,
                                                    memmax = 0.5))
 
-    kernelUDs <- setNames(terra::rast(
-      
-      parallel::parSapplyLB(cl, 1:length(unique(id)), function(m) {
+    kernelUDs <- parallel::parSapplyLB(cl, 1:length(unique(id)), function(m) {
       
       tempxy <- xy[id %in% unique(id)[m], ]
       
@@ -98,7 +99,7 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 2,
                       gridsize = userGrid$grid.size,
                       density = T)
       
-      tf <- paste0(getwd(), '\\tmp\\kernel_', unique(id)[m], '.tif')
+      tf <- paste0(getwd(), '/tmp/kernel_', unique(id)[m], '.tif')
 
       terra::writeRaster(
         x = wmKDE::UD2rast(
@@ -113,16 +114,14 @@ bKDE <- function(xy, id, wts = NULL, ncores = parallelly::availableCores() - 2,
       
       return(tf)
       
-    })), unique(id))
+    })
     
     parallel::stopCluster(cl)
-    # rm(list=ls())
-    # gc()
-    
+
   }
 
   if(verbose) message("Analysis complete !")
 
-  return(kernelUDs)
+  return(stats::setNames(kernelUDs, unique(id)))
 
 }
