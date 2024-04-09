@@ -39,25 +39,25 @@ cell.size = 250
 uPop <- (st_read('input/cartab.gpkg', query = 'select distinct(POPULATION) from cartab', quiet = TRUE) %>% pull)[-c(1:2)]
 
 for(pop in uPop) {
-
+  
   cat('Population =', pop, '\n')
   
-  ## 3 a) ----
+  ### 2.1) ----
   ptab <- st_read('input/cartab.gpkg', 
                   query = paste0("select * from cartab where POPULATION is '", pop, "' and IDANIMAL in(",
                                  str_c("'", str_c(idref[idref$Pop == pop,'IDAnimal'], collapse = "','"), "')")), 
                   quiet = TRUE)
   
-  ## Ensure sufficient locs per IDANIMAL ----
+  ### 2.2) Ensure sufficient locs per IDANIMAL ----
   ntab <- table(ptab$IDANIMAL)
   ptab <- filter(ptab, IDANIMAL %in% names(ntab)[ntab >= 50])
   rm(ntab)
   
-  ## 3 c) Define common grid parameters ----
+  ### 2.3) Define common grid parameters ----
   hgrid <- kernelGrid(locs = ptab,
                       cell.size = cell.size)
-
-  ## 3 d) Estimate simple kernel using all points in the population ----
+  
+  ### 2.4) Estimate simple kernel using all points in the population ----
   dtrain <- filter(ptab, AN < 2021)
   skUD <- setNames(wmKDE(dtrain, id = 'IDANIMAL', avg = F, trim = F, popGrid = hgrid, ktype = 'iso')$wmKDE, 'skUD')
   writeRaster(skUD, filename = paste0('output/skUD_', pop, '_', cell.size, 'm.tif'), overwrite = T)
@@ -65,7 +65,9 @@ for(pop in uPop) {
   gc()
   
   ##################################################################################
-  ## 4 a) No spatial weighting (k0) ----
+  ## 3) No spatial weighting (k0) ----
+  
+  ### 3.1) Individual kernels ----
   sapp(rast(bKDE(xy = as.data.frame(st_coordinates(dtrain)) %>% rename(x=X, y=Y),
                  id = dtrain$IDANIMAL,
                  wts = NULL,
@@ -78,12 +80,12 @@ for(pop in uPop) {
        filename = 'tmp/tUD0_1.tif', overwrite = T)
   gc()
   
-  ## 4 b) Mean population kernel ----
+  ### 3.2) Mean population kernel ----
   wmKDE(dtrain, id = 'IDANIMAL', avg = T, trim = F, ncores = 6, popGrid = hgrid, 
         ktype = 'iso', write2file = TRUE, writeDir = 'tmp', fileTag = 'tUD0_2', retObj = FALSE)
   gc()
   
-  ## 4 c) Weighted mean population kernel ----
+  ### 3.3) Weighted mean population kernel ----
   wmKDE(dtrain, id = 'IDANIMAL', avg = T, trim = F, ncores = 6, popGrid = hgrid, ktype = 'iso',
         udw = group_by(dtrain, IDANIMAL) %>%
           summarize(w = 1 - (sum(dburn > 0 | dcut > 0 | droad > 0) / length(dburn))) %>%
@@ -92,7 +94,7 @@ for(pop in uPop) {
         write2file = TRUE, writeDir = 'tmp', fileTag = 'tUD0_3', retObj = FALSE)
   gc()
   
-  ## 4 d) Write to file ----
+  ### 3.4) Write to file ----
   f <- list.files('tmp', pattern = 'tUD0_', full.names = T)
   f <- f[str_sub(f, start = -4L)=='.tif']
   writeRaster(c(setNames(rast('tmp/tUD0_1.tif'), unique(dtrain$IDANIMAL)),
@@ -101,9 +103,10 @@ for(pop in uPop) {
               filename = paste0('output/tUD0_', pop, '_', cell.size, 'm.tif'), overwrite = T)
   gc()
   file.remove(list.files('tmp', pattern = 'tUD0_', full.names = T))
-
-  ##########################################################################################
-  # 5 a) Poids = delta values (max = 317) * pop-specific Manly coefficients (k1) ----
+  
+  ## 4) Poids = delta values (max = 317) * pop-specific Manly coefficients (k1) ----
+  
+  ### 4.1) Individual kernels
   sapp(rast(bKDE(xy = as.data.frame(st_coordinates(dtrain)) %>% rename(x=X, y=Y),
                  id = dtrain$IDANIMAL,
                  wts = dtrain$p1,
@@ -114,14 +117,14 @@ for(pop in uPop) {
        fun = fhat2confin, filename = 'tmp/tUD1_1.tif', overwrite = T)
   gc()
   
-  ## 4 b) Mean population kernel ----
+  ### 4.2) Mean population kernel ----
   wmKDE(dtrain, id = 'IDANIMAL', spw = 'p1', avg = T, 
         trim = F, ncores = 6, popGrid = hgrid, ktype = 'iso', 
         write2file = TRUE, writeDir = 'tmp', fileTag = 'tUD1_2', 
         retObj = FALSE)
   gc()
   
-  ## 5 c) Weighted mean population kernel ----
+  ### 4.3) Weighted mean population kernel ----
   wmKDE(dtrain, id = 'IDANIMAL', spw = 'p1', avg = T, trim = F, ncores = 6, popGrid = hgrid, ktype = 'iso',
         udw = group_by(dtrain, IDANIMAL) %>%
           summarize(w = 1 - (sum(dburn > 0 | dcut > 0 | droad > 0) / length(dburn))) %>%
@@ -130,7 +133,7 @@ for(pop in uPop) {
         write2file = TRUE, writeDir = 'tmp', fileTag = 'tUD1_3', retObj = FALSE)
   gc()
   
-  ## 5 d) Write to file ----
+  ### 4.4) Write to file ----
   f <- list.files('tmp', pattern = 'tUD1_', full.names = T)
   f <- f[str_sub(f, start = -4L)=='.tif']
   writeRaster(c(setNames(rast('tmp/tUD1_1.tif'), unique(dtrain$IDANIMAL)),
@@ -139,9 +142,10 @@ for(pop in uPop) {
               filename = paste0('output/tUD1_', pop, '_', cell.size, 'm.tif'), overwrite = T)
   gc()
   file.remove(list.files('tmp', pattern = 'tUD1_', full.names = T))
+
+  ## 5) Poids binaires = 'tolérance zéro' (k2) ----
   
-  ############################################################3
-  ## 6 a) Poids binaires = 'tolérance zéro' (k2) ----
+  ### 5.1) Individual kernels ----
   sapp(rast(bKDE(xy = as.data.frame(st_coordinates(dtrain)) %>% rename(x=X, y=Y),
                  id = dtrain$IDANIMAL,
                  wts = dtrain$p2,
@@ -152,13 +156,13 @@ for(pop in uPop) {
        fun = fhat2confin, filename = 'tmp/tUD2_1.tif', overwrite = T)
   gc()
   
-  ## 6 b) Mean population kernel ----
+  ### 5.2) Mean population kernel ----
   wmKDE(dtrain, id = 'IDANIMAL', spw = 'p2', avg = T, trim = F, 
         ncores = 6, popGrid = hgrid, ktype = 'iso', write2file = TRUE, 
         writeDir = 'tmp', fileTag = 'tUD2_2', retObj = FALSE)
   gc()
-
-  ## 6 c) Weighted mean population kernel ----
+  
+  ### 5.3) Weighted mean population kernel ----
   wmKDE(dtrain, id = 'IDANIMAL', spw = 'p2', avg = T, trim = F, 
         ncores = 6, popGrid = hgrid, ktype = 'iso',
         udw = group_by(dtrain, IDANIMAL) %>%
@@ -167,8 +171,8 @@ for(pop in uPop) {
           select(IDANIMAL, w), 
         write2file = TRUE, writeDir = 'tmp', fileTag = 'tUD2_3', retObj = FALSE)
   gc()
-
-  ## 6 d) Write to file ----
+  
+  ### 5.4) Write to file ----
   f <- list.files('tmp', pattern = 'tUD2_', full.names = T)
   f <- f[str_sub(f, start = -4L)=='.tif']
   writeRaster(c(setNames(rast('tmp/tUD2_1.tif'), unique(dtrain$IDANIMAL)),
@@ -177,19 +181,18 @@ for(pop in uPop) {
               filename = paste0('output/tUD2_', pop, '_', cell.size, 'm.tif'), overwrite = T)
   gc()
   file.remove(list.files('tmp', pattern = 'tUD2_', full.names = T))
-
-  ##############################################################
-  ## 7 a) Generate validation kernels and write to file ----
+  
+  ## 6) Generate validation kernels and write to file ----
   vtrain <- filter(ptab, AN >= 2021)
-
-  ## 7 b) Ensure sufficient locs per IDANIMAL ----
+  
+  ### 6.1) Ensure sufficient locs per IDANIMAL ----
   ntab <- table(vtrain$IDANIMAL)
   vtrain <- filter(vtrain, IDANIMAL %in% names(ntab)[ntab >= 50])
   rm(ntab)
-
+  
   xy <- as.data.frame(st_coordinates(vtrain)) %>% rename(x=X, y=Y)
   
-  ## 7 c)  ----
+  ### 6.2)  Individual kernels ----
   sapp(rast(bKDE(xy = xy,
                  id = vtrain$IDANIMAL, 
                  wts = NULL, 
@@ -201,11 +204,11 @@ for(pop in uPop) {
        fun = fhat2confin,
        filename = 'tmp/vUD_1.tif', overwrite = T)
   
-  ## 7 d) Calculate and append mean (unweighted) population kernel ----
+  ### 6.3) Calculate and append mean (unweighted) population kernel ----
   wmKDE(vtrain, id = 'IDANIMAL', avg = T, trim = F, popGrid = hgrid, ktype = 'iso',
         write2file = TRUE, writeDir = 'tmp', fileTag = 'vUD_2', retObj = FALSE)
-
-  ## 7 e) Write to file ----
+  
+  ### 6.4) Write to file ----
   f <- list.files('tmp', pattern = 'vUD_', full.names = T)
   f <- f[str_sub(f, start = -4L)=='.tif']
   writeRaster(c(setNames(rast('tmp/vUD_1.tif'), unique(vtrain$IDANIMAL)),
@@ -219,19 +222,42 @@ for(pop in uPop) {
 
 
 ## Test outcomes (e.g.)
-x1 <- F1score(pred = rast('output/vUD_Caniapiscau_250m.tif', lyr = 'mUD'),
-              obs = rast('output/tUD0_Caniapiscau_250m.tif', lyr = 'mUD'))
+pop = 'Caniapiscau'
+x1 <- F1score(pred = rast(paste0('output/vUD_', pop, '_250m.tif'), lyr = 'mUD'),
+              obs = rast(paste0('output/tUD0_', pop, '_250m.tif'), lyr = 'mUD'))
 
-x2 <- F1score(pred = rast('output/vUD_Caniapiscau_250m.tif', lyr = 'mUD'),
-              obs = rast('output/tUD1_Caniapiscau_250m.tif', lyr = 'mUD'))
+x2 <- F1score(pred = rast(paste0('output/vUD_', pop, '_250m.tif'), lyr = 'mUD'),
+              obs = rast(paste0('output/tUD1_', pop, '_250m.tif'), lyr = 'mUD'))
 
-x3 <- F1score(pred = rast('output/vUD_Caniapiscau_250m.tif', lyr = 'mUD'),
-              obs = rast('output/tUD2_Caniapiscau_250m.tif', lyr = 'mUD'))
+x3 <- F1score(pred = rast(paste0('output/vUD_', pop, '_250m.tif'), lyr = 'mUD'),
+              obs = rast(paste0('output/tUD2_', pop, '_250m.tif'), lyr = 'mUD'))
 
 
 y1 <- F1score(pred = rast('output/vUD_Caniapiscau_250m.tif', lyr = 'mUD'),
               obs = vtrain, 
               id = 'IDANIMAL')
 
-                                          
+system.time({
+  
+  x <- do.call(rbind, lapply(uPop, function(pop) {
+    data.frame(pop = pop,
+               
+               ks = pgoi(pred = rast(paste0('output/skUD_', pop, '_250m.tif')),
+                         obs = rast(paste0('output/vUD_', pop, '_250m.tif'), lyr = 'mUD')),
+               
+               nospw = pgoi(pred = rast(paste0('output/tUD0_', pop, '_250m.tif'), lyr = 'wmUD'),
+                            obs = rast(paste0('output/vUD_', pop, '_250m.tif'), lyr = 'mUD')),
+               
+               wman = pgoi(pred = rast(paste0('output/tUD1_', pop, '_250m.tif'), lyr = 'wmUD'),
+                           obs = rast(paste0('output/vUD_', pop, '_250m.tif'), lyr = 'mUD')),
+               
+               wbin = pgoi(pred = rast(paste0('output/tUD2_', pop, '_250m.tif'), lyr = 'wmUD'),
+                           obs = rast(paste0('output/vUD_', pop, '_250m.tif'), lyr = 'mUD')))
+  }))
+  
+}) 
 
+udOlap(x = rast('output/tUD0_Caniapiscau_250m.tif', lyr = 'mUD'),
+       y = rast('output/vUD_Caniapiscau_250m.tif', lyr = 'mUD'),
+       percent = 70,
+       method = 'PGOI')
