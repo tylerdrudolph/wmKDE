@@ -16,11 +16,14 @@
 #' @export
 #' 
 F1score <- function(pred, obs, id = NULL, threshVal = 70, binWidth = 100, beta = 1) {
-  
-  FScore <- idName <- NULL
+
+  FScore <- id <- NULL
   
   cuts <- sort(c(seq(0, 100, binWidth), threshVal))
   cuts <- cuts[!duplicated(cuts)]
+  
+  browser()
+  
   
   Fcalc <- function(v, beta = beta) {
     list(recall = caret::recall(v, relevant = row.names(v)[(cuts > threshVal)[-1]]),
@@ -47,13 +50,14 @@ F1score <- function(pred, obs, id = NULL, threshVal = 70, binWidth = 100, beta =
     } else {
       
       Uid <- pull(obs, id) %>% unique
-      n <- table(pull(obs, !!as.name(id)))
+      nobs <- table(pull(obs, !!as.name(id)))
       
       v <- setNames(lapply(Uid, function(i) {
         terra::crosstab(c(terra::classify(stats::setNames(pred, 'pred'),
                                           rcl = cuts), 
                           terra::classify(stats::setNames(
-                            terra::rasterize(x = dplyr::filter(obs, idName == i), y = pred, 
+                            terra::rasterize(x = dplyr::filter(obs, !!as.name(id) == i), 
+                                             y = pred, 
                                              fun = function(x) 100, background = 0.1), i), rcl = cuts)))
       }), Uid)
       
@@ -62,8 +66,8 @@ F1score <- function(pred, obs, id = NULL, threshVal = 70, binWidth = 100, beta =
         dplyr::mutate(dplyr::across(recall:FScore, ~ unlist(.x)),
                       dplyr::across(recall:FScore, ~ ifelse(is.na(.x), 0, .x)),
                       id = names(v), .before = recall) %>% 
-        dplyr::bind_cols(n = as.vector(n)) %>%
-        dplyr::mutate(w = (n / sum(n))[order(n, decreasing = T)])
+        dplyr::bind_cols(nobs = as.vector(nobs)) %>%
+        dplyr::mutate(w = (nobs / sum(nobs))[order(nobs, decreasing = T)])
       
       return(dplyr::bind_rows(ftab,
                               data.frame(id = 'wtdMean',

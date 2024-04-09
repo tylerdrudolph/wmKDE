@@ -4,3 +4,9 @@
 .Ruserdata
 
 output/
+
+tmp/
+
+archive/
+
+input/
