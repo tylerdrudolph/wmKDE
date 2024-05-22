@@ -6,8 +6,11 @@
 #' @return spatRaster with probabilities adjusted such that corresponding volumes sum to exactly 1
 #' @export
 #'
-finetune <- function(r, out = 1) {
+finetune <- function(r, tin = 'prob', tout = 'prob') {
   
+  if(tin == 'vol') {
+    r <- r / prod(res(r))
+  }
   cell.area <- prod(res(r))
   v <- r * cell.area
   tot <- unlist(terra::global(v, 'sum'))
@@ -28,7 +31,7 @@ finetune <- function(r, out = 1) {
     v <- v - (weights * rem)
   }
   
-  if(out == 1) {
+  if(tout == 'prob') {
     return(v / cell.area)
   } else {
     return(v)

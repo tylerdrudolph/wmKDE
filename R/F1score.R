@@ -17,14 +17,13 @@
 #' 
 F1score <- function(pred, obs, id = NULL, threshVal = 70, binWidth = 100, beta = 1) {
 
-  FScore <- id <- NULL
-  
-  cuts <- sort(c(seq(0, 100, binWidth), threshVal))
-  cuts <- cuts[!duplicated(cuts)]
+  FScore <- NULL
   
   browser()
   
-  
+  cuts <- sort(c(seq(0, 100, binWidth), threshVal))
+  cuts <- cuts[!duplicated(cuts)]
+
   Fcalc <- function(v, beta = beta) {
     list(recall = caret::recall(v, relevant = row.names(v)[(cuts > threshVal)[-1]]),
          precision = caret::precision(v, relevant = row.names(v)[(cuts > threshVal)[-1]]),

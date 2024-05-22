@@ -20,7 +20,7 @@
 #' @param trim logical; should outer NA cells be excluded, where applicable, from the kernel raster?
 #' @param write2file logical; write results to file?
 #' @param ow logical; overwrite existing files?
-#' @param fileTag optional string to append to file name when export=TRUE.
+#' @param fileTag optional string to append to file name when write2file = TRUE.
 #' @param writeDir optional path to desired write folder location. Default is working directory.
 #' @param retObj logical; should result be returned into R environment?
 #' @param verbose logical; should status messages be printed?
@@ -111,7 +111,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
                        bwType = bwType, sproj = sproj, bwGlobal = bwGlobal, 
                        ncores = ifelse(avg, ncores, 1), 
                        rscale = zscale, verbose = FALSE)
-
+    
     if(avg & length(fUD) > 1) {
 
       ## Fine-tune to ensure kernel probability values sum to 1 (when zscale == FALSE)
@@ -131,8 +131,8 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
       ## Derive the mean population UD (no weighting)
       wmKern <- terra::weighted.mean(rast(fUD), w = w)
 
-      ## Convert rescaled UD values back to kernel density probabilities (if zscale == TRUE)
-      if(zscale) wmKern <- wmKern / unlist(terra::global(wmKern, 'sum', na.rm = T)) / spatres / spatres
+      ## Convert rescaled UD values back to volumetric kernel density probability (if zscale == TRUE)
+      if(zscale) wmKern <- wmKern / unlist(terra::global(wmKern, 'sum', na.rm = T))
 
       # delete temporary files
       unlink(fUD)
@@ -144,7 +144,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     } 
     
     ## Fine-tune so all probabilities sum to 1
-    wmKern <- wmKDE::finetune(wmKern)
+    wmKern <- wmKDE::finetune(wmKern, tin = 'vol')
 
     ###########################################
     ## Calculate the core area isopleth
