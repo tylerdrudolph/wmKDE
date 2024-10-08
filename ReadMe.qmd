@@ -150,10 +150,10 @@ locs4 <- dplyr::bind_rows(data.frame(id = 1, w = 0.025, col=8, x = rnorm(n=400, 
 ## 4 a) basic kernel
 bkern4 <- wmKDE(locs4, avg=F, spatres=0.1, verbose=F)
 
-## 4 b) mean kernel, no rescaling
+## 4 b) mean kernel, w/rescaling
 mkern4a <- wmKDE(locs4, avg=T, id='id', spatres=0.1, ncores=1, verbose=F)
 
-## 4 c) mean kernel w/spatial weights
+## 4 c) mean kernel w/rescaling & spatial weights
 mkern4b <- wmKDE(locs4, avg=T, id='id', spw = 'w', spatres=0.1, ncores=1, verbose=F)
 
 ## 4 d) plot estimates side by side

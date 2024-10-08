@@ -20,7 +20,10 @@ Imports:
     shiny,
     stats,
     stringr,
-    terra
+    terra,
+    latticeDensity,
+    caret,
+    tibble
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

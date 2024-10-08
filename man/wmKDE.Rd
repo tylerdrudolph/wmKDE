@@ -11,12 +11,13 @@ wmKDE(
   spw = NULL,
   udw = NULL,
   popGrid = NULL,
-  bwType = c("pi", "silv", "scott"),
+  bwType = c("pi", "silv", "scott", "user"),
   bwGlobal = TRUE,
   zscale = TRUE,
   spatres = 1000,
   ktype = "iso",
   ncores = ifelse(avg, parallel::detectCores() - 1, 1),
+  trim = TRUE,
   write2file = FALSE,
   ow = TRUE,
   writeDir = getwd(),
@@ -49,6 +50,8 @@ wmKDE(
 \item{ktype}{character vector indicating type of kernel value to return. Options are 'iso' = isopleth contours (default, higher values indicate greater probability); 'prob' = UD probabilities; 'vol' = UD volumes (sum to 1). Multiple arguments are accepted.}
 
 \item{ncores}{integer indicating the number of parallel processes (threads) over which to execute the estimation of individual UDs. Defaults to detectCores()-1 when avg = TRUE, otherwise 1.}
+
+\item{trim}{logical; should outer NA cells be excluded, where applicable, from the kernel raster?}
 
 \item{write2file}{logical; write results to file?}
 

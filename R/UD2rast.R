@@ -10,7 +10,7 @@ UD2rast <- function(UD, sproj = NULL) {
 
   x <- expand.grid(x = UD$x1, y = UD$x2)
   x$z <- as.vector(UD$fhat)
-  return(terra::rast(x, crs = sproj$wkt))
+  if(is.null(sproj)) terra::rast(x) else terra::rast(x, crs = sproj$wkt)
   
   # return(terra::flip(x = terra::rast(x = t(UD$fhat),
   #                             extent = terra::ext(min(UD$x1), max(UD$x1), min(UD$x2), max(UD$x2)),

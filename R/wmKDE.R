@@ -17,21 +17,25 @@
 #' @param spatres vector of length 1 specifying the desired spatial resolution of the output UD in the x & y dimensions. Asymmetrical cells not implemented.
 #' @param ktype character vector indicating type of kernel value to return. Options are 'iso' = isopleth contours (default, higher values indicate greater probability); 'prob' = UD probabilities; 'vol' = UD volumes (sum to 1). Multiple arguments are accepted.
 #' @param ncores integer indicating the number of parallel processes (threads) over which to execute the estimation of individual UDs. Defaults to detectCores()-1 when avg = TRUE, otherwise 1.
+#' @param trim logical; should outer NA cells be excluded, where applicable, from the kernel raster?
 #' @param write2file logical; write results to file?
 #' @param ow logical; overwrite existing files?
 #' @param fileTag optional string to append to file name when export=TRUE.
 #' @param writeDir optional path to desired write folder location. Default is working directory.
 #' @param retObj logical; should result be returned into R environment?
 #' @param verbose logical; should status messages be printed?
+#' 
+#' @import parallelly
 #'
 #' @return list containing spatRaster object(s) of length equal to length(ktype) and one sf multipolygons object corresponding to isopleth and core area contours
 #' @export
 #'
 wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NULL,
-                  bwType = c('pi', 'silv', 'scott'),
+                  bwType = c('pi', 'silv', 'scott','user'),
                   bwGlobal = TRUE, zscale = TRUE, spatres = 1000, ktype = 'iso',
-                  ncores = ifelse(avg, parallel::detectCores() - 1, 1),
-                  write2file = FALSE, ow = TRUE, writeDir = getwd(), fileTag = NULL,
+                  ncores = ifelse(avg, parallelly::availableCores() - 2, 1),
+                  trim = TRUE, write2file = FALSE, ow = TRUE, 
+                  writeDir = getwd(), fileTag = NULL,
                   retObj = TRUE, verbose = TRUE) {
 
   X <- Y <- w <- layer <- isopleth <- geometry <- plevel <- NULL
@@ -61,7 +65,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     wtvec <- pull(x, spw)
     if(!inherits(wtvec, 'numeric'))  stop('spw not numeric')
   } else {
-    wtvec <- rep(1, nrow(x))
+    wtvec <- NULL
   }
 
   if(avg & !is.null(udw)) {
@@ -71,19 +75,23 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
   }
 
   ktype <- match.arg(ktype, c('iso', 'prob', 'vol'), several.ok = T)
-  if(!inherits(spatres, 'numeric')) stop('spatres must be numeric')
+  if(!is.null(spatres) & !inherits(spatres, 'numeric')) stop('spatres must be numeric')
   if(length(spatres) > 1) {
     message('length(spatres) > 1 but asymmetrical cells are not currently implemented. Only first element will be used.')
     spatres <- spatres[1]
   }
   
-  bwType <- match.arg(bwType, choices = c('pi','silv','scott'), several.ok = F)
+  bwType <- match.arg(bwType, choices = c('pi','silv','scott','user'), several.ok = F)
 
   ## Log system processing time
   ptime <- system.time({
 
     ## Generate the spatial grid over which the UD(s) are to be estimated
-    if(is.null(popGrid)) popGrid <- wmKDE::kernelGrid(x, exp.range = 3, cell.size = spatres)
+    if(is.null(popGrid)) {
+      popGrid <- wmKDE::kernelGrid(x, exp.range = 3, cell.size = spatres)
+    } else {
+      spatres <- res(popGrid$r)[1]
+    }
 
     ## Deploy kernel estimation
     if(avg) {
@@ -99,70 +107,80 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
     }
 
     ## Deploy multiple UD estimations
-    udList <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid, bwType = bwType,
-                          bwGlobal = bwGlobal, ncores = ifelse(avg, ncores, 1), verbose = FALSE)
-    
-    if(avg & length(udList) > 1) {
+    fUD <- wmKDE::bKDE(xy = xy, id = idvec, wts = wtvec, userGrid = popGrid, 
+                       bwType = bwType, sproj = sproj, bwGlobal = bwGlobal, 
+                       ncores = ifelse(avg, ncores, 1), 
+                       rscale = zscale, verbose = FALSE)
 
-      ## Rescale z values
-      if(zscale) {
+    if(avg & length(fUD) > 1) {
 
-        if(verbose) message("Rescaling density values...")
-        udList <- lapply(udList, function(x) {
-          x$fhat <- wmKDE::range01(x$fhat * spatres * spatres)
-          return(x)
+      ## Fine-tune to ensure kernel probability values sum to 1 (when zscale == FALSE)
+      if(!zscale) {
+        lapply(1:length(fUD), function(i) {
+          writeRaster(finetune(rast(fUD[i])),
+                      filename = fUD[i],
+                      overwrite = T)
         })
-
       }
 
+      ## Assign UD weights, if provided
+      if(!is.null(udw)) ft = 'weighted' else ft = 'unweighted'
+      if(verbose) message(paste0("Deriving the ", ft, " mean population UD..."))
+      if(is.null(udw)) w <- rep(1, length(fUD)) else w <- udw$w[match(names(fUD), pull(udw, id))]
+      
       ## Derive the mean population UD (no weighting)
-      if(!is.null(udw)) fileTag = 'weighted' else fileTag = 'unweighted'
-      if(verbose) message(paste0("Deriving the ", fileTag, " mean population UD..."))
-      if(verbose & spatres != 1000) message("Resampling to ", spatres, "m...")
-      if(is.null(udw)) w <- rep(1, length(udList)) else w <- udw$w[match(names(udList), pull(udw, id))]
-      wmKern <- wmKDE::wmUD(udList, w = w, sproj = sproj, checksum = !zscale, silent = TRUE)
+      wmKern <- terra::weighted.mean(rast(fUD), w = w)
 
-      if(zscale) wmKern$fhat <- wmKern$fhat / sum(wmKern$fhat) / spatres / spatres
+      ## Convert rescaled UD values back to kernel density probabilities (if zscale == TRUE)
+      if(zscale) wmKern <- wmKern / unlist(terra::global(wmKern, 'sum', na.rm = T)) / spatres / spatres
 
+      # delete temporary files
+      unlink(fUD)
+      
     } else {
 
-      wmKern <- udList[[1]]
+      wmKern <- rast(fUD)
 
-    }
+    } 
+    
+    ## Fine-tune so all probabilities sum to 1
+    wmKern <- wmKDE::finetune(wmKern)
 
     ###########################################
     ## Calculate the core area isopleth
     if(verbose) message("Calculating the core area isopleth...")
-    fileTag <- stringr::str_c(Sys.Date(), "_",
-                   ifelse(avg, 'mean_', 'simple_'),
-                   ifelse(!is.null(spw), 'weighted_kernel_', 'kernel_'),
-                   # if(!is.null(fileTag)) stringr::str_c(fileTag, '_'),
-                   spatres, "m")
+    ftag <- stringr::str_c(Sys.Date(), "_",
+                           ifelse(avg, 'mean_', 'simple_'),
+                           ifelse(!is.null(spw), 'weighted_kernel_', 'kernel_'),
+                           spatres, "m")
 
+    if(!is.null(fileTag)) fileTag <- paste0(ftag, '_', fileTag) else fileTag <- ftag
     crit.core.isopleth <- wmKDE::core.area(wmKern)
 
     ############################################
     ## Extract isopleth polygons, including core/intensive use area
-    isopoly <- wmKDE::UD2sf(UD = wmKern, sproj = sproj,
+    isopoly <- wmKDE::isopolygonize(r = wmKern, sproj = sproj,
                             prob = sort(c(crit.core.isopleth, c(0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 0.95, 0.99, 1))))
     
     ## Determine the % of points falling within individual isopleth boundaries, including core area
-    ftab <- terra::extract(wmKDE::UD2rast(wmKern, sproj), xy)
+    ftab <- terra::extract(wmKern, xy, fun = 'sum')
     names(ftab)[2] <- 'plevel'
-    isopoly <- mutate(isopoly, pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
+    isopoly <- mutate(isopoly, 
+                      pcntPnts = sapply(isopoly$plevel, function(iso) sum(ftab$plevel >= iso) / nrow(xy)),
                       coreArea = ifelse(isopleth == crit.core.isopleth, TRUE, FALSE), .before = geometry) %>%
       sf::st_cast('MULTIPOLYGON')
 
-    wmKernRast <- wmKern
-    wmKernRast$fhat <- 100 - fhat2confin(wmKern$fhat)
-    wmKernRast <- wmKDE::UD2rast(wmKernRast, sproj)
-    wmKernRast[wmKernRast < 0.05] <- NA
-    wmKernRast <- terra::trim(wmKernRast)
+    wmKernRast <- wmKDE::fhat2confin(wmKern)
+    
+    if(trim) {
+      wmKernRast[wmKernRast < 0.05] <- NA
+      wmKernRast <- terra::trim(wmKernRast)
+    }
 
     ## Prepare output objects
     outlist <- list(wmKDE = terra::rast(list(iso = wmKernRast,
-                                             prob = terra::crop(wmKDE::UD2rast(wmKern, sproj), wmKernRast),
-                                             vol = terra::crop(wmKDE::UD2rast(wmKern, sproj) * spatres * spatres, wmKernRast)))[[ktype]],
+                                             prob = terra::crop(wmKern, wmKernRast),
+                                             vol = terra::crop(wmKern * spatres * spatres, wmKernRast)))[[ktype]],
                     isocontours = isopoly)
 
     if(write2file) {
@@ -176,7 +194,7 @@ wmKDE <- function(x, id = NULL, avg = TRUE, spw = NULL, udw = NULL, popGrid = NU
       cat(paste0("System date/time: ", Sys.time()), '\n', '\n')
       cat('MODEL PARAMETERS:', '\n', '\n')
       cat('METHODOLOGY:', '\n')
-      cat('Type of analysis:', ifelse(!is.null(spw) | !is.null(udw), 'weighted', ''), ifelse(avg, 'mean', 'Simple'), 'kernel', '\n')
+      cat('Type of analysis:', ifelse(!is.null(spw) | !is.null(udw), 'weighted', ''), ifelse(avg, 'mean', 'simple'), 'kernel', '\n')
       cat('Spatial weights:', !is.null(spw), '\n')
       cat('UD weights:', !is.null(udw), '\n')
       cat("Number of parallel processes (threads):", ncores, "\n")

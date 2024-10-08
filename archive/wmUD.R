@@ -11,9 +11,9 @@
 #' @return weighted mean spatRaster object
 #' @export
 #'
-wmUD = function(udList, w, sproj = NULL, silent = FALSE, dres = NULL, checksum = TRUE) {
+wmUD = function(udStack, w, sproj = NULL, silent = FALSE, dres = NULL, checksum = TRUE) {
 
-  if(length(w) != length(udList)) stop("w must be of same length as udList")
+  if(length(w) != terra::nlyr(udStack)) stop("w must be of same length as udList")
 
   if(!silent) {
     if(length(unique(w))==1) {

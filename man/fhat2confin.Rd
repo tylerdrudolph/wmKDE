@@ -4,13 +4,13 @@
 \alias{fhat2confin}
 \title{Convert UD density estimates into relative probabilities}
 \usage{
-fhat2confin(z)
+fhat2confin(r, ...)
 }
 \arguments{
-\item{z}{numeric vector representing UD density values (fhat)}
+\item{r}{spatRaster corresponding to UD kernel density values}
 }
 \value{
-numeric vector of length(z) representing isopleths corresponding to input density values
+spatRaster correponding to kernel probability isopleths
 }
 \description{
 Convert UD density estimates into relative probabilities
