@@ -8,12 +8,13 @@ bKDE(
   xy,
   id,
   wts = NULL,
-  ncores = parallelly::availableCores() - 1,
+  ncores = parallelly::availableCores() - 2,
   userGrid = NULL,
   bwType = c("pi", "silv", "scott", "user"),
   bwGlobal = TRUE,
   sproj = NULL,
   write2file = TRUE,
+  rscale = FALSE,
   verbose = TRUE
 )
 }
@@ -35,6 +36,8 @@ bKDE(
 \item{sproj}{optional EPSG}
 
 \item{write2file}{logical indicating whether results should be written to file}
+
+\item{rscale}{logical indicating whether results should be rescaled between 0 and 1}
 
 \item{verbose}{logical indicating whether messages should be printed}
 }

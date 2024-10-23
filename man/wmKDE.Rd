@@ -16,7 +16,7 @@ wmKDE(
   zscale = TRUE,
   spatres = 1000,
   ktype = "iso",
-  ncores = ifelse(avg, parallel::detectCores() - 1, 1),
+  ncores = ifelse(avg, parallelly::availableCores() - 2, 1),
   trim = TRUE,
   write2file = FALSE,
   ow = TRUE,

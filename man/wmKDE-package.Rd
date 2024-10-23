@@ -3,7 +3,6 @@
 \docType{package}
 \name{wmKDE-package}
 \alias{wmKDE-package}
-\alias{_PACKAGE}
 \title{wmKDE: Weighted mean kernel density estimation}
 \description{
 Estimation of spatially and individually UD weighted mean bivariate population kernels
