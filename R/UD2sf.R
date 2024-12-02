@@ -13,7 +13,7 @@ UD2sf = function(UD, sproj = NULL, probs = 0.95, spType = 'poly') {
   isopleth <- plevel <- x <- NULL
 
   # derive isopleth contours
-  p <- as.vector(calcHR(UD, p = probs, silent = T)$ps)
+  p <- as.vector(calcHR(UD2rast(UD, sproj = sproj), p = probs, silent = T)$ps)
   if(any(probs == 1)) p[probs == 1] <- 1e-13
   fhat.contlines = lapply(p, function(i) grDevices::contourLines(x = UD$x1, y = UD$x2, z = UD$fhat, levels = i))
 
