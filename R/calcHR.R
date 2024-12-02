@@ -12,11 +12,11 @@
 calcHR <- function(r, p = c(0.5, 0.95), silent = TRUE) {
   
   #  Get size of grid
-  dx <- res(r)[1]
-  dy <- res(r)[2]
+  dx <- terra::res(r)[1]
+  dy <- terra::res(r)[2]
   
   # Estimate total volume and make sure = 1 or close to
-  totp <- unlist(terra::global(r, 'sum')) * dx * dy
+  totp <- unlist(terra::global(r, 'sum', na.rm = T)) * dx * dy
   
   if(round(totp, 4) < 0.95) {
     warning("ERROR, total probability not equal to 1")
@@ -28,7 +28,7 @@ calcHR <- function(r, p = c(0.5, 0.95), silent = TRUE) {
   
   #  Get minimum number of squares to encompass pHR% probability
   nps <- length(p)
-  zsort <- sort(as.vector(terra::values(r)))
+  zsort <- sort(as.vector(terra::values(r, na.rm = T)))
   pt <- cumsum(zsort) / sum(zsort)
   
   #  p's for plotting and number of cells for calculating HR

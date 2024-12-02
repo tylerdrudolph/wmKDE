@@ -13,7 +13,7 @@ core.area <- function(r, plot = FALSE, silent=TRUE) {
   IVseq <- seq(0.01, 0.99, 0.01)
   
   ## Estimate contour levels and size within each isopleth
-  hrsum <- calcHR(r, p = IVseq, silent = silent)
+  hrsum <- calcHR(UD2rast(r), p = IVseq, silent = silent)
   kernel.areas <- c(hrsum$HR * 1e-6)
   
   ## Create a dataframe with the percent area (PA) and isopleth volume (IV) scaled from 0-1
@@ -32,12 +32,12 @@ core.area <- function(r, plot = FALSE, silent=TRUE) {
   b1 <- summary(nls.fit)$coefficients[2,1]
   
   ## Isopleth volume where the curve's slope = 1
-  cutval <- (-log(b0*b1)/b1)
+  cutval <- (-log(b0*b1) / b1)
   
   ## Plot
   if(plot) {
-    graphics::plot(y=df[,2], x=df[,1], type="l", xlab="Confidence Interval", ylab="Probability")
-    graphics::abline(v=cutval, lty="dotted", col="red")
+    graphics::plot(y = df[,2], x = df[,1], type = "l", xlab = "Confidence Interval", ylab = "Probability")
+    graphics::abline(v = cutval, lty = "dotted", col = "red")
   }
   
   return(cutval)
